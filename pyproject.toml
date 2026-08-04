@@ -1,0 +1,16 @@
+[project]
+name = "aprender-mesmo-engine"
+version = "0.1.0"
+description = "Motor de produção de vídeos educativos em Manim para o canal Aprender Mesmo."
+requires-python = ">=3.11"
+
+dependencies = [
+    "manim",
+    "manim-voiceover[gtts]",
+    "numpy",
+    "pillow",
+    "pydub",
+]
+
+[tool.setuptools]
+packages = ["engine"]
