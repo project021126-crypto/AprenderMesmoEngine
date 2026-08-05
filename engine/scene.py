@@ -8,9 +8,15 @@ from manim import (
     FadeIn,
     FadeOut,
     Scene,
+    config,
 )
 
 from engine.audio import VOZ_PADRAO, gerar_audio
+from engine.formatos import (
+    ConfiguracaoFormato,
+    FORMATO_LONG,
+    FORMATO_SHORT,
+)
 from engine.legendas import criar_legenda
 from engine.sync import calcular_duracao_narracao
 
@@ -19,14 +25,34 @@ class CenaAprenderMesmo(Scene):
     """
     Cena base do Aprender Mesmo.
 
-    Permite criar narração, legenda e animação sincronizadas
-    através do método `self.narrar(...)`.
+    Esta classe trata automaticamente de:
+    - formato do vídeo;
+    - narração;
+    - duração do áudio;
+    - sincronização das animações;
+    - legendas;
+    - pausas entre frases.
     """
+
+    formato: ConfiguracaoFormato = FORMATO_LONG
 
     pasta_narracoes = Path("narracoes")
     voz_padrao = VOZ_PADRAO
     velocidade_voz = "+0%"
     volume_voz = "+0%"
+
+    def setup(self) -> None:
+        """
+        Aplica automaticamente o formato da cena antes
+        de começar a renderização.
+        """
+
+        config.pixel_width = self.formato.pixel_width
+        config.pixel_height = self.formato.pixel_height
+        config.frame_width = self.formato.frame_width
+        config.frame_height = self.formato.frame_height
+
+        super().setup()
 
     def narrar(
         self,
@@ -44,21 +70,6 @@ class CenaAprenderMesmo(Scene):
         - duração da animação;
         - legenda;
         - pequena pausa final.
-
-        Exemplos:
-
-        self.narrar(
-            "A Lua passa entre o Sol e a Terra.",
-            FadeIn(lua),
-        )
-
-        self.narrar(
-            "Os três astros ficam alinhados.",
-            [
-                lua.animate.move_to(...),
-                FadeIn(sombra),
-            ],
-        )
         """
 
         texto = texto.strip()
@@ -85,7 +96,12 @@ class CenaAprenderMesmo(Scene):
         legenda = None
 
         if mostrar_legenda:
-            legenda = criar_legenda(texto)
+            legenda = criar_legenda(
+                texto=texto,
+                tamanho_fonte=self.formato.tamanho_legenda,
+                margem_inferior=self.formato.margem_legenda,
+            )
+
             self.add(legenda)
 
         self.add_sound(str(caminho_audio))
@@ -101,6 +117,7 @@ class CenaAprenderMesmo(Scene):
 
             if not lista_animacoes:
                 self.wait(tempos.audio)
+
             else:
                 self.play(
                     *lista_animacoes,
@@ -136,3 +153,19 @@ class CenaAprenderMesmo(Scene):
             FadeIn(objeto),
             run_time=duracao,
         )
+
+
+class CenaShort(CenaAprenderMesmo):
+    """
+    Base para vídeos verticais 9:16.
+    """
+
+    formato = FORMATO_SHORT
+
+
+class CenaLong(CenaAprenderMesmo):
+    """
+    Base para vídeos horizontais 16:9.
+    """
+
+    formato = FORMATO_LONG
