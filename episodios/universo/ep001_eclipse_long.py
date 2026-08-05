@@ -44,7 +44,7 @@ config.frame_height = 8.0
 from engine.scene import CenaLong  # noqa: E402
 
 
-VERSAO_LONG = "EP001_LONG_V2"
+VERSAO_LONG = "EP001_LONG_V3"
 
 
 class Episodio001EclipseLong(CenaLong):
@@ -291,11 +291,35 @@ class Episodio001EclipseLong(CenaLong):
         *,
         cor=YELLOW,
         pausa: float = 0.85,
-    ) -> Text:
+    ) -> VGroup:
+        """
+        Mostra a pergunta como uma transição independente.
+
+        O painel preto cobre completamente a cena anterior, evitando
+        perguntas sobrepostas a planetas, títulos ou etiquetas.
+        """
+        painel = Rectangle(
+            width=config.frame_width,
+            height=config.frame_height,
+            fill_color=BLACK,
+            fill_opacity=0.98,
+            stroke_opacity=0,
+        )
+        painel.set_z_index(800)
+
         pergunta = self.pergunta(texto, cor)
-        self.play(Write(pergunta), run_time=0.85)
+        pergunta.move_to(ORIGIN)
+        pergunta.set_z_index(810)
+
+        grupo = VGroup(painel, pergunta)
+
+        self.play(
+            FadeIn(painel),
+            Write(pergunta),
+            run_time=0.85,
+        )
         self.wait(pausa)
-        return pergunta
+        return grupo
 
     # ======================================================
     # EPISÓDIO
@@ -863,18 +887,32 @@ class Episodio001EclipseLong(CenaLong):
             color=RED,
         )
 
+        estados_regioes = VGroup(
+            self.etiqueta(
+                "TOTAL",
+                LEFT * 4.35 + UP * 2.55,
+                YELLOW,
+                27,
+            ),
+            self.etiqueta(
+                "PARCIAL",
+                UP * 2.55,
+                ORANGE,
+                27,
+            ),
+            self.etiqueta(
+                "SEM ECLIPSE",
+                RIGHT * 4.35 + UP * 2.55,
+                RED,
+                25,
+            ),
+        )
+
         self.narrar(
             "Uma pessoa dentro da faixa central vê um eclipse total.",
             [
                 FadeIn(cidade_total),
-                FadeIn(
-                    self.etiqueta(
-                        "TOTAL",
-                        RIGHT * 4.8 + UP * 1.35,
-                        YELLOW,
-                        29,
-                    )
-                ),
+                FadeIn(estados_regioes[0]),
             ],
         )
 
@@ -882,14 +920,7 @@ class Episodio001EclipseLong(CenaLong):
             "Outra pessoa, algumas centenas de quilómetros ao lado, pode ver apenas um eclipse parcial.",
             [
                 FadeIn(cidade_parcial),
-                FadeIn(
-                    self.etiqueta(
-                        "PARCIAL",
-                        RIGHT * 4.8,
-                        ORANGE,
-                        29,
-                    )
-                ),
+                FadeIn(estados_regioes[1]),
             ],
         )
 
@@ -897,14 +928,7 @@ class Episodio001EclipseLong(CenaLong):
             "E alguém ainda mais afastado pode não notar absolutamente nada.",
             [
                 FadeIn(cidade_fora),
-                FadeIn(
-                    self.etiqueta(
-                        "SEM ECLIPSE",
-                        RIGHT * 4.8 + DOWN * 1.35,
-                        RED,
-                        27,
-                    )
-                ),
+                FadeIn(estados_regioes[2]),
             ],
         )
 
@@ -945,6 +969,7 @@ class Episodio001EclipseLong(CenaLong):
             cidade_total,
             cidade_parcial,
             cidade_fora,
+            estados_regioes,
             seta_movimento,
             frase_regioes,
         )
@@ -1184,108 +1209,206 @@ class Episodio001EclipseLong(CenaLong):
             "A NATUREZA REAGE À MUDANÇA DA LUZ",
         )
 
-        ceu_dia = Rectangle(
-            width=4.4,
-            height=3.1,
-            fill_color=BLUE_B,
+        # Cartão 1 — aves
+        passaro_corpo = Ellipse(
+            width=1.00,
+            height=0.58,
+            color=ORANGE,
+            fill_color=ORANGE,
             fill_opacity=1,
-            stroke_opacity=0,
-        ).move_to(LEFT * 3.8)
-
-        ceu_noite = Rectangle(
-            width=4.4,
-            height=3.1,
-            fill_color=BLACK,
+            stroke_width=2,
+        )
+        passaro_cabeca = Circle(
+            radius=0.22,
+            color=ORANGE,
+            fill_color=ORANGE,
             fill_opacity=1,
-            stroke_color=WHITE,
-            stroke_opacity=0.25,
-        ).move_to(LEFT * 3.8)
-
+        ).next_to(passaro_corpo, RIGHT, buff=-0.08)
+        passaro_bico = Polygon(
+            ORIGIN,
+            RIGHT * 0.28 + UP * 0.10,
+            RIGHT * 0.28 + DOWN * 0.10,
+            color=YELLOW,
+            fill_color=YELLOW,
+            fill_opacity=1,
+        ).next_to(passaro_cabeca, RIGHT, buff=0.0)
+        passaro_asa = Arc(
+            radius=0.35,
+            start_angle=0.10,
+            angle=2.50,
+            color=BLACK,
+            stroke_width=4,
+        ).move_to(passaro_corpo)
         passaro = VGroup(
-            Arc(
-                radius=0.42,
-                start_angle=0.20,
-                angle=2.6,
-                color=ORANGE,
-                stroke_width=5,
-            ),
-            Arc(
-                radius=0.42,
-                start_angle=0.35,
-                angle=2.6,
-                color=ORANGE,
-                stroke_width=5,
-            ).flip(),
-        ).move_to(RIGHT * 0.4 + UP * 0.9)
+            passaro_corpo,
+            passaro_cabeca,
+            passaro_bico,
+            passaro_asa,
+        )
 
-        inseto = VGroup(
+        cartao_aves_fundo = RoundedRectangle(
+            width=3.75,
+            height=3.15,
+            corner_radius=0.18,
+            fill_color=BLACK,
+            fill_opacity=0.92,
+            stroke_color=ORANGE,
+            stroke_opacity=0.85,
+            stroke_width=2,
+        )
+        passaro.move_to(cartao_aves_fundo.get_center() + UP * 0.42)
+        texto_aves = Text(
+            "AVES
+PROCURAM ABRIGO",
+            font_size=27,
+            color=WHITE,
+            weight="BOLD",
+            line_spacing=0.88,
+        ).move_to(cartao_aves_fundo.get_center() + DOWN * 0.75)
+        cartao_aves = VGroup(
+            cartao_aves_fundo,
+            passaro,
+            texto_aves,
+        ).move_to(LEFT * 4.35)
+
+        # Cartão 2 — insetos noturnos
+        inseto_corpo = VGroup(
             Circle(
-                radius=0.24,
+                radius=0.26,
                 color=GREEN,
                 fill_color=GREEN,
                 fill_opacity=1,
             ),
-            Line(
-                LEFT * 0.20,
-                RIGHT * 0.20,
-                color=WHITE,
-                stroke_width=2,
-            ),
-        ).move_to(RIGHT * 3.9 + DOWN * 0.1)
+            Circle(
+                radius=0.18,
+                color=GREEN,
+                fill_color=GREEN,
+                fill_opacity=1,
+            ).shift(UP * 0.36),
+            Line(LEFT * 0.24, RIGHT * 0.24, color=WHITE, stroke_width=2),
+            Line(LEFT * 0.42 + UP * 0.12, RIGHT * 0.42 + DOWN * 0.12, color=GREEN, stroke_width=3),
+            Line(LEFT * 0.42 + DOWN * 0.12, RIGHT * 0.42 + UP * 0.12, color=GREEN, stroke_width=3),
+        )
 
+        cartao_insetos_fundo = RoundedRectangle(
+            width=3.75,
+            height=3.15,
+            corner_radius=0.18,
+            fill_color=BLACK,
+            fill_opacity=0.92,
+            stroke_color=GREEN,
+            stroke_opacity=0.85,
+            stroke_width=2,
+        )
+        inseto_corpo.move_to(cartao_insetos_fundo.get_center() + UP * 0.42)
+        texto_insetos = Text(
+            "INSETOS NOTURNOS
+FICAM ATIVOS",
+            font_size=25,
+            color=WHITE,
+            weight="BOLD",
+            line_spacing=0.88,
+        ).move_to(cartao_insetos_fundo.get_center() + DOWN * 0.75)
+        cartao_insetos = VGroup(
+            cartao_insetos_fundo,
+            inseto_corpo,
+            texto_insetos,
+        ).move_to(ORIGIN)
+
+        # Cartão 3 — descida de temperatura
         termometro = VGroup(
             Rectangle(
-                width=0.38,
-                height=2.7,
+                width=0.34,
+                height=1.65,
                 color=WHITE,
                 fill_opacity=0,
             ),
             Rectangle(
-                width=0.20,
-                height=2.15,
-                color=RED,
-                fill_color=RED,
+                width=0.18,
+                height=1.15,
+                color=BLUE_B,
+                fill_color=BLUE_B,
                 fill_opacity=1,
-            ).align_to(ORIGIN, DOWN),
+            ).shift(DOWN * 0.24),
             Circle(
-                radius=0.32,
-                color=RED,
-                fill_color=RED,
+                radius=0.28,
+                color=BLUE_B,
+                fill_color=BLUE_B,
                 fill_opacity=1,
-            ).shift(DOWN * 1.48),
-        ).move_to(RIGHT * 2.2)
+            ).shift(DOWN * 0.95),
+        )
+
+        seta_frio = Arrow(
+            UP * 0.75,
+            DOWN * 0.55,
+            color=BLUE_B,
+            buff=0,
+        ).next_to(termometro, RIGHT, buff=0.28)
+
+        cartao_frio_fundo = RoundedRectangle(
+            width=3.75,
+            height=3.15,
+            corner_radius=0.18,
+            fill_color=BLACK,
+            fill_opacity=0.92,
+            stroke_color=BLUE_B,
+            stroke_opacity=0.85,
+            stroke_width=2,
+        )
+        VGroup(termometro, seta_frio).move_to(
+            cartao_frio_fundo.get_center() + UP * 0.42
+        )
+        texto_frio = Text(
+            "A TEMPERATURA
+PODE DESCER",
+            font_size=26,
+            color=WHITE,
+            weight="BOLD",
+            line_spacing=0.88,
+        ).move_to(cartao_frio_fundo.get_center() + DOWN * 0.75)
+        cartao_frio = VGroup(
+            cartao_frio_fundo,
+            termometro,
+            seta_frio,
+            texto_frio,
+        ).move_to(RIGHT * 4.35)
+
+        cartoes_natureza = VGroup(
+            cartao_aves,
+            cartao_insetos,
+            cartao_frio,
+        )
 
         self.narrar(
             "Muitos animais não compreendem o eclipse como nós. Mas reagem à rápida mudança de luz e temperatura.",
             [
                 Write(titulo_7),
-                FadeIn(ceu_dia),
-                FadeIn(passaro),
-                FadeIn(inseto),
-                FadeIn(termometro),
+                FadeIn(cartoes_natureza),
             ],
         )
 
         self.narrar(
             "Algumas aves deixam de cantar e procuram abrigo, como fariam ao anoitecer.",
-            FadeIn(ceu_noite),
+            cartao_aves.animate.scale(1.05),
         )
 
         self.narrar(
             "Alguns insetos noturnos tornam-se ativos, enquanto outros animais ficam inquietos ou confusos.",
+            cartao_insetos.animate.scale(1.05),
         )
 
         resposta_animais = Text(
-            "NÃO PENSAM: «CHEGOU A NOITE».\n"
-            "MAS O CORPO REAGE COMO SE A NOITE ESTIVESSE A COMEÇAR.",
+            "NÃO PENSAM: «CHEGOU A NOITE».
+"
+            "REAGEM AOS SINAIS DO AMBIENTE.",
             font_size=31,
             color=WHITE,
             weight="BOLD",
             line_spacing=0.90,
-        ).move_to(DOWN * 2.35)
+        ).move_to(DOWN * 2.75)
 
-        if resposta_animais.width > 12.4:
-            resposta_animais.scale_to_fit_width(12.4)
+        if resposta_animais.width > 11.8:
+            resposta_animais.scale_to_fit_width(11.8)
 
         self.narrar(
             "Portanto, não é que pensem conscientemente que chegou a noite. O comportamento muda porque os sinais do ambiente mudaram.",
@@ -1294,11 +1417,7 @@ class Episodio001EclipseLong(CenaLong):
 
         self.limpar(
             titulo_7,
-            ceu_dia,
-            ceu_noite,
-            passaro,
-            inseto,
-            termometro,
+            cartoes_natureza,
             resposta_animais,
         )
 
