@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 from manim import (
-    Animation,
     FadeIn,
     FadeOut,
     Scene,
@@ -25,11 +25,11 @@ class CenaAprenderMesmo(Scene):
     """
     Cena base do Aprender Mesmo.
 
-    Esta classe trata automaticamente de:
-    - formato do vídeo;
+    Trata automaticamente de:
+    - formato Short ou Long;
     - narração;
     - duração do áudio;
-    - sincronização das animações;
+    - sincronização;
     - legendas;
     - pausas entre frases.
     """
@@ -43,8 +43,7 @@ class CenaAprenderMesmo(Scene):
 
     def setup(self) -> None:
         """
-        Aplica automaticamente o formato da cena antes
-        de começar a renderização.
+        Aplica o formato definido pela CenaShort ou CenaLong.
         """
 
         config.pixel_width = self.formato.pixel_width
@@ -57,19 +56,21 @@ class CenaAprenderMesmo(Scene):
     def narrar(
         self,
         texto: str,
-        animacoes: Animation | Sequence[Animation] | None = None,
+        animacoes: Any | Sequence[Any] | None = None,
         *,
         mostrar_legenda: bool = True,
         pausa_final: float = 0.20,
         margem_animacao: float = 0.15,
     ) -> None:
         """
-        Gera a narração e sincroniza automaticamente:
+        Gera áudio, legenda e animações sincronizadas.
 
-        - ficheiro MP3;
-        - duração da animação;
-        - legenda;
-        - pequena pausa final.
+        Aceita:
+        - FadeIn(objeto)
+        - Write(texto)
+        - objeto.animate.move_to(...)
+        - uma lista com várias animações
+        - nenhuma animação
         """
 
         texto = texto.strip()
@@ -110,15 +111,15 @@ class CenaAprenderMesmo(Scene):
             self.wait(tempos.audio)
 
         else:
-            if isinstance(animacoes, Animation):
-                lista_animacoes = [animacoes]
-            else:
+            # Uma lista ou tuplo contém várias animações.
+            # Qualquer outro objeto é tratado como uma animação única,
+            # incluindo objeto.animate.move_to(...).
+            if isinstance(animacoes, (list, tuple)):
                 lista_animacoes = list(animacoes)
-
-            if not lista_animacoes:
-                self.wait(tempos.audio)
-
             else:
+                lista_animacoes = [animacoes]
+
+            if lista_animacoes:
                 self.play(
                     *lista_animacoes,
                     run_time=tempos.animacao,
@@ -130,6 +131,8 @@ class CenaAprenderMesmo(Scene):
 
                 if tempo_restante > 0:
                     self.wait(tempo_restante)
+            else:
+                self.wait(tempos.audio)
 
         if legenda is not None:
             self.play(
@@ -142,7 +145,7 @@ class CenaAprenderMesmo(Scene):
 
     def mostrar_sem_narracao(
         self,
-        objeto,
+        objeto: Any,
         duracao: float = 0.6,
     ) -> None:
         """
@@ -157,7 +160,7 @@ class CenaAprenderMesmo(Scene):
 
 class CenaShort(CenaAprenderMesmo):
     """
-    Base para vídeos verticais 9:16.
+    Base automática para vídeos verticais 9:16.
     """
 
     formato = FORMATO_SHORT
@@ -165,7 +168,7 @@ class CenaShort(CenaAprenderMesmo):
 
 class CenaLong(CenaAprenderMesmo):
     """
-    Base para vídeos horizontais 16:9.
+    Base automática para vídeos horizontais 16:9.
     """
 
     formato = FORMATO_LONG
