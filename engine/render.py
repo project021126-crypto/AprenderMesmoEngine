@@ -1,125 +1,122 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 
-RAIZ_PROJETO = Path(__file__).resolve().parent.parent
-PASTA_EPISODIOS = RAIZ_PROJETO / "episodios"
-PASTA_RENDERS = RAIZ_PROJETO / "renders"
+PASTA_PROJETO = Path(__file__).resolve().parent.parent
 
 
-def localizar_episodio(categoria: str, episodio: str) -> Path:
-    ficheiro = PASTA_EPISODIOS / categoria / f"{episodio}.py"
-
-    if not ficheiro.exists():
-        raise FileNotFoundError(
-            f"Não encontrei o episódio:\n{ficheiro}"
-        )
-
-    return ficheiro
-
-
-def renderizar(
-    categoria: str,
-    episodio: str,
-    nome_cena: str,
-    qualidade: str = "l",
-) -> None:
-    ficheiro = localizar_episodio(categoria, episodio)
-
-    qualidades = {
-        "l": "-ql",
-        "m": "-qm",
-        "h": "-qh",
-        "k": "-qk",
-    }
-
-    opcao_qualidade = qualidades.get(qualidade)
-
-    if opcao_qualidade is None:
-        raise ValueError(
-            "Qualidade inválida. Usa: l, m, h ou k."
-        )
-
-    PASTA_RENDERS.mkdir(parents=True, exist_ok=True)
-
-    comando = [
-        sys.executable,
-        "-m",
-        "manim",
-        opcao_qualidade,
-        "--disable_caching",
-        "--media_dir",
-        str(PASTA_RENDERS),
-        str(ficheiro),
-        nome_cena,
-    ]
-
-    print()
-    print("🎬 Aprender Mesmo Studio")
-    print(f"Categoria: {categoria}")
-    print(f"Episódio: {episodio}")
-    print(f"Cena: {nome_cena}")
-    print(f"Qualidade: {qualidade}")
-    print()
-
-    resultado = subprocess.run(
-        comando,
-        cwd=RAIZ_PROJETO,
-    )
-
-    if resultado.returncode != 0:
-        raise RuntimeError(
-            "A renderização terminou com erro."
-        )
-
-    print()
-    print("✅ Renderização concluída.")
-    print(f"📁 Renders: {PASTA_RENDERS}")
-
-
-def criar_argumentos() -> argparse.ArgumentParser:
+def criar_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Renderizador do Aprender Mesmo Studio."
     )
 
     parser.add_argument(
         "categoria",
-        help="Exemplo: universo, matematica ou fisica",
+        help="Categoria do episódio, por exemplo: universo",
     )
 
     parser.add_argument(
         "episodio",
-        help="Exemplo: ep001_eclipse",
+        help="Nome do ficheiro sem .py, por exemplo: ep001_eclipse",
     )
 
     parser.add_argument(
         "cena",
-        help="Exemplo: Episodio001Eclipse",
+        help="Nome da classe Manim, por exemplo: Episodio001Eclipse",
     )
 
     parser.add_argument(
         "-q",
         "--qualidade",
-        default="l",
         choices=["l", "m", "h", "k"],
-        help="l=baixa, m=média, h=alta, k=4K",
+        default="l",
+        help="Qualidade: l, m, h ou k",
     )
 
     return parser
 
 
+def renderizar(
+    categoria: str,
+    episodio: str,
+    cena: str,
+    qualidade: str,
+) -> None:
+    ficheiro_episodio = (
+        PASTA_PROJETO
+        / "episodios"
+        / categoria
+        / f"{episodio}.py"
+    )
+
+    if not ficheiro_episodio.exists():
+        raise FileNotFoundError(
+            f"Episódio não encontrado: {ficheiro_episodio}"
+        )
+
+    pasta_renders = PASTA_PROJETO / "renders"
+
+    ambiente = os.environ.copy()
+
+    pythonpath_atual = ambiente.get("PYTHONPATH", "")
+
+    caminhos_python = [str(PASTA_PROJETO)]
+
+    if pythonpath_atual:
+        caminhos_python.append(pythonpath_atual)
+
+    ambiente["PYTHONPATH"] = os.pathsep.join(caminhos_python)
+
+    comando = [
+        sys.executable,
+        "-m",
+        "manim",
+        f"-q{qualidade}",
+        "--disable_caching",
+        "--media_dir",
+        str(pasta_renders),
+        str(ficheiro_episodio),
+        cena,
+    ]
+
+    print()
+    print("🎬 Aprender Mesmo Studio")
+    print(f"Categoria: {categoria}")
+    print(f"Episódio: {episodio}")
+    print(f"Cena: {cena}")
+    print(f"Qualidade: {qualidade}")
+    print()
+
+    resultado = subprocess.run(
+        comando,
+        cwd=PASTA_PROJETO,
+        env=ambiente,
+    )
+
+    if resultado.returncode != 0:
+        raise RuntimeError(
+            f"A renderização terminou com o código "
+            f"{resultado.returncode}."
+        )
+
+    print()
+    print("✅ Renderização concluída.")
+    print(f"📁 Renders: {pasta_renders}")
+
+
 def main() -> None:
-    parser = criar_argumentos()
+    parser = criar_parser()
     argumentos = parser.parse_args()
 
     renderizar(
         categoria=argumentos.categoria,
         episodio=argumentos.episodio,
-        nome_cena=argumentos.cena,
+        cena=argumentos.cena,
         qualidade=argumentos.qualidade,
     )
 
