@@ -1,10 +1,21 @@
 from __future__ import annotations
 
+import textwrap
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from manim import FadeIn, FadeOut, Scene
+from manim import (
+    BLACK,
+    FadeIn,
+    FadeOut,
+    RoundedRectangle,
+    Scene,
+    Text,
+    VGroup,
+    WHITE,
+    config,
+)
 
 from engine.audio import VOZ_PADRAO, gerar_audio
 from engine.formatos import (
@@ -12,7 +23,6 @@ from engine.formatos import (
     FORMATO_LONG,
     FORMATO_SHORT,
 )
-from engine.legendas import criar_legenda
 from engine.sync import calcular_duracao_narracao
 
 
@@ -20,9 +30,8 @@ class CenaAprenderMesmo(Scene):
     """
     Cena base do Aprender Mesmo.
 
-    O formato da imagem é aplicado pelo renderizador antes
-    de o Manim criar a câmara. Esta classe trata da narração,
-    legendas, animações e pausas.
+    A legenda do rodapé é criada diretamente aqui para não
+    depender de versões antigas de engine/legendas.py.
     """
 
     formato: ConfiguracaoFormato = FORMATO_LONG
@@ -31,6 +40,70 @@ class CenaAprenderMesmo(Scene):
     voz_padrao = VOZ_PADRAO
     velocidade_voz = "+0%"
     volume_voz = "+0%"
+
+    def criar_legenda_rodape(self, texto: str) -> VGroup:
+        """
+        Legenda de rodapé forte:
+        - branco puro;
+        - fonte grande e em negrito;
+        - 2 ou 3 linhas no Short;
+        - fundo preto sólido;
+        - posição acima dos controlos do vídeo.
+        """
+
+        vertical = config.frame_height > config.frame_width
+        limite = 28 if vertical else 72
+
+        linhas = textwrap.wrap(
+            texto.strip(),
+            width=limite,
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
+        texto_formatado = "\n".join(linhas)
+
+        largura_maxima = (
+            config.frame_width - 0.50
+            if vertical
+            else config.frame_width - 1.10
+        )
+
+        legenda = Text(
+            texto_formatado,
+            font_size=42 if vertical else 34,
+            color="#FFFFFF",
+            weight="BOLD",
+            line_spacing=0.88,
+            fill_opacity=1.0,
+            stroke_color=BLACK,
+            stroke_width=1.0,
+            stroke_opacity=1.0,
+        )
+
+        if legenda.width > largura_maxima:
+            legenda.scale_to_fit_width(largura_maxima)
+
+        fundo = RoundedRectangle(
+            width=min(legenda.width + 0.62, largura_maxima + 0.10),
+            height=legenda.height + 0.45,
+            corner_radius=0.14,
+            fill_color=BLACK,
+            fill_opacity=1.0,
+            stroke_color=WHITE,
+            stroke_opacity=1.0,
+            stroke_width=2.2,
+        )
+
+        legenda.move_to(fundo.get_center())
+        grupo = VGroup(fundo, legenda)
+
+        if vertical:
+            grupo.move_to([0, -5.30, 0])
+        else:
+            grupo.move_to([0, -3.15, 0])
+
+        grupo.set_z_index(1000)
+        return grupo
 
     def narrar(
         self,
@@ -65,11 +138,7 @@ class CenaAprenderMesmo(Scene):
         legenda = None
 
         if mostrar_legenda:
-            legenda = criar_legenda(
-                texto=texto,
-                tamanho_fonte=self.formato.tamanho_legenda,
-                margem_inferior=self.formato.margem_legenda,
-            )
+            legenda = self.criar_legenda_rodape(texto)
             self.add(legenda)
 
         self.add_sound(str(caminho_audio))
@@ -88,18 +157,15 @@ class CenaAprenderMesmo(Scene):
                     run_time=tempos.animacao,
                 )
 
-                tempo_restante = tempos.audio - tempos.animacao
+                restante = tempos.audio - tempos.animacao
 
-                if tempo_restante > 0:
-                    self.wait(tempo_restante)
+                if restante > 0:
+                    self.wait(restante)
             else:
                 self.wait(tempos.audio)
 
         if legenda is not None:
-            self.play(
-                FadeOut(legenda),
-                run_time=0.15,
-            )
+            self.play(FadeOut(legenda), run_time=0.15)
 
         if tempos.pausa_final > 0:
             self.wait(tempos.pausa_final)
@@ -109,19 +175,16 @@ class CenaAprenderMesmo(Scene):
         objeto: Any,
         duracao: float = 0.6,
     ) -> None:
-        self.play(
-            FadeIn(objeto),
-            run_time=duracao,
-        )
+        self.play(FadeIn(objeto), run_time=duracao)
 
 
 class CenaShort(CenaAprenderMesmo):
-    """Base para vídeos verticais 9:16."""
+    """Base automática para vídeos verticais 9:16."""
 
     formato = FORMATO_SHORT
 
 
 class CenaLong(CenaAprenderMesmo):
-    """Base para vídeos horizontais 16:9."""
+    """Base automática para vídeos horizontais 16:9."""
 
     formato = FORMATO_LONG
