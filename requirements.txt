@@ -1,5 +1,6 @@
-manim
-manim-voiceover[gtts]
+manim==0.20.1
+edge-tts
+mutagen
 numpy
 pillow
 pydub
