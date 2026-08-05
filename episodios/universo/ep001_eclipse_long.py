@@ -1,150 +1,488 @@
 from manim import (
-    BLACK, BLUE, BLUE_B, BLUE_D, DOWN, FadeIn, FadeOut, GREY_B,
-    GREEN, LEFT, ORANGE, ORIGIN, RED, RIGHT, UP, WHITE, YELLOW,
-    Arc, Arrow, Circle, DashedLine, Dot, Ellipse, GrowArrow,
-    GrowFromCenter, Line, Polygon, Rectangle, Text, VGroup, Write
+    BLACK,
+    BLUE,
+    BLUE_B,
+    BLUE_D,
+    DOWN,
+    FadeIn,
+    FadeOut,
+    GREY_B,
+    GREEN,
+    LEFT,
+    ORANGE,
+    ORIGIN,
+    RED,
+    RIGHT,
+    UP,
+    WHITE,
+    YELLOW,
+    Arc,
+    Arrow,
+    Circle,
+    DashedLine,
+    Dot,
+    Ellipse,
+    GrowArrow,
+    GrowFromCenter,
+    Line,
+    Polygon,
+    Rectangle,
+    RoundedRectangle,
+    Text,
+    VGroup,
+    Write,
+    config,
 )
 
-from engine.scene import CenaLong
+# ==========================================================
+# FORMATO LONG — 16:9
+# ==========================================================
+
+config.frame_width = 14.222
+config.frame_height = 8.0
+
+from engine.scene import CenaLong  # noqa: E402
+
+
+VERSAO_LONG = "EP001_LONG_V2"
 
 
 class Episodio001EclipseLong(CenaLong):
     """
-    Vídeo horizontal 16:9 sobre eclipses solares.
-    Estrutura preparada para ultrapassar 6 minutos.
+    LONG 001 — Eclipse Solar
+
+    Versão V2:
+    - duração prevista: 8–9 minutos;
+    - perguntas reais do público;
+    - pequenas pausas antes das respostas;
+    - mais emoção e suspense;
+    - explicações visuais;
+    - mesma voz aprovada no Short.
     """
 
-    def titulo_secao(self, texto: str) -> Text:
-        return Text(
-            texto,
-            font_size=40,
-            color=WHITE,
-            weight="BOLD",
-        ).to_edge(UP, buff=0.4)
+    # ======================================================
+    # COMPONENTES VISUAIS
+    # ======================================================
 
-    def limpar(self, *objetos) -> None:
-        self.play(
-            FadeOut(VGroup(*objetos)),
-            run_time=0.8,
-        )
-
-    def construct(self) -> None:
+    def fundo_estrelado(self, quantidade: int = 110) -> VGroup:
         estrelas = VGroup(
             *[
                 Dot(
                     point=[
-                        -6.7 + (indice % 14),
-                        -3.5 + ((indice * 7) % 8),
+                        -6.8 + (indice % 15) * 0.95,
+                        -3.45 + ((indice * 7) % 8) * 0.95,
                         0,
                     ],
-                    radius=0.018,
+                    radius=0.016 + (indice % 3) * 0.004,
                     color=WHITE,
-                ).set_opacity(0.40)
-                for indice in range(90)
+                ).set_opacity(0.28 + (indice % 4) * 0.12)
+                for indice in range(quantidade)
             ]
         )
+        estrelas.set_z_index(-20)
+        return estrelas
 
-        sol_abertura = Circle(
-            radius=1.65,
+    def criar_sol(
+        self,
+        raio: float,
+        posicao=ORIGIN,
+        intensidade: float = 1.0,
+    ) -> VGroup:
+        nucleo = Circle(
+            radius=raio,
             color=YELLOW,
             fill_color=YELLOW,
             fill_opacity=1,
-        )
+            stroke_width=3,
+        ).move_to(posicao)
 
-        lua_abertura = Circle(
-            radius=1.58,
-            color=GREY_B,
-            fill_color=BLACK,
-            fill_opacity=1,
-        ).move_to(RIGHT * 5.7)
-
-        self.add(estrelas)
-
-        self.narrar(
-            "Durante alguns minutos, o dia pode transformar-se em noite.",
-            GrowFromCenter(sol_abertura),
-        )
-
-        self.narrar(
-            "A temperatura desce, as sombras mudam e muitos animais comportam-se como se a noite tivesse chegado de repente.",
-            lua_abertura.animate.move_to(sol_abertura.get_center()),
-        )
-
-        coroa = VGroup(
+        halo = VGroup(
             *[
                 Circle(
-                    radius=1.65 + indice * 0.12,
+                    radius=raio + indice * raio * 0.12,
+                    stroke_color=YELLOW,
+                    stroke_opacity=max(
+                        0.08,
+                        intensidade * (0.66 - indice * 0.09),
+                    ),
+                    stroke_width=max(1.2, 4.8 - indice * 0.55),
+                ).move_to(posicao)
+                for indice in range(1, 6)
+            ]
+        )
+
+        raios = VGroup(
+            *[
+                Line(
+                    start=posicao + UP * raio * 1.15,
+                    end=posicao + UP * raio * 1.55,
+                    color=YELLOW,
+                    stroke_opacity=0.68 * intensidade,
+                    stroke_width=2.3,
+                ).rotate(
+                    indice * 0.3927,
+                    about_point=posicao,
+                )
+                for indice in range(16)
+            ]
+        )
+
+        return VGroup(halo, raios, nucleo)
+
+    def criar_terra(
+        self,
+        raio: float,
+        posicao=ORIGIN,
+    ) -> VGroup:
+        atmosfera = Circle(
+            radius=raio * 1.10,
+            stroke_color=BLUE_B,
+            stroke_opacity=0.48,
+            stroke_width=5,
+        ).move_to(posicao)
+
+        planeta = Circle(
+            radius=raio,
+            color=BLUE,
+            fill_color=BLUE_D,
+            fill_opacity=1,
+            stroke_width=2,
+        ).move_to(posicao)
+
+        continentes = VGroup(
+            Ellipse(
+                width=raio * 0.72,
+                height=raio * 0.34,
+                color=GREEN,
+                fill_color=GREEN,
+                fill_opacity=0.85,
+                stroke_opacity=0,
+            ).move_to(posicao + LEFT * raio * 0.20 + UP * raio * 0.18),
+            Ellipse(
+                width=raio * 0.55,
+                height=raio * 0.26,
+                color=GREEN,
+                fill_color=GREEN,
+                fill_opacity=0.75,
+                stroke_opacity=0,
+            ).move_to(posicao + RIGHT * raio * 0.24 + DOWN * raio * 0.16),
+        )
+
+        brilho = Arc(
+            radius=raio * 0.86,
+            start_angle=1.85,
+            angle=2.20,
+            color=WHITE,
+            stroke_opacity=0.45,
+            stroke_width=3,
+        ).move_to(posicao)
+
+        return VGroup(atmosfera, planeta, continentes, brilho)
+
+    def criar_lua(
+        self,
+        raio: float,
+        posicao=ORIGIN,
+    ) -> VGroup:
+        halo = Circle(
+            radius=raio * 1.16,
+            stroke_color=WHITE,
+            stroke_opacity=0.28,
+            stroke_width=3,
+        ).move_to(posicao)
+
+        lua = Circle(
+            radius=raio,
+            color=WHITE,
+            fill_color=GREY_B,
+            fill_opacity=1,
+            stroke_width=2,
+        ).move_to(posicao)
+
+        crateras = VGroup(
+            Circle(
+                radius=raio * 0.16,
+                color=BLACK,
+                fill_color=BLACK,
+                fill_opacity=0.18,
+                stroke_opacity=0,
+            ).move_to(posicao + LEFT * raio * 0.28 + UP * raio * 0.20),
+            Circle(
+                radius=raio * 0.11,
+                color=BLACK,
+                fill_color=BLACK,
+                fill_opacity=0.16,
+                stroke_opacity=0,
+            ).move_to(posicao + RIGHT * raio * 0.25 + DOWN * raio * 0.18),
+            Circle(
+                radius=raio * 0.08,
+                color=BLACK,
+                fill_color=BLACK,
+                fill_opacity=0.12,
+                stroke_opacity=0,
+            ).move_to(posicao + RIGHT * raio * 0.05 + UP * raio * 0.34),
+        )
+
+        return VGroup(halo, lua, crateras)
+
+    def titulo_secao(self, numero: str, titulo: str) -> Text:
+        texto = Text(
+            f"{numero}. {titulo}",
+            font_size=40,
+            color=WHITE,
+            weight="BOLD",
+        ).to_edge(UP, buff=0.35)
+
+        if texto.width > 13.0:
+            texto.scale_to_fit_width(13.0)
+
+        return texto
+
+    def pergunta(self, texto: str, cor=YELLOW) -> Text:
+        pergunta = Text(
+            texto,
+            font_size=46,
+            color=cor,
+            weight="BOLD",
+            line_spacing=0.90,
+        )
+
+        if pergunta.width > 12.6:
+            pergunta.scale_to_fit_width(12.6)
+
+        return pergunta
+
+    def etiqueta(
+        self,
+        texto: str,
+        posicao,
+        cor=YELLOW,
+        tamanho: int = 28,
+    ) -> VGroup:
+        palavra = Text(
+            texto,
+            font_size=tamanho,
+            color=cor,
+            weight="BOLD",
+        )
+
+        fundo = RoundedRectangle(
+            width=palavra.width + 0.40,
+            height=palavra.height + 0.22,
+            corner_radius=0.10,
+            fill_color=BLACK,
+            fill_opacity=0.96,
+            stroke_color=cor,
+            stroke_opacity=0.90,
+            stroke_width=1.8,
+        )
+
+        palavra.move_to(fundo.get_center())
+        grupo = VGroup(fundo, palavra).move_to(posicao)
+        grupo.set_z_index(200)
+        return grupo
+
+    def limpar(self, *objetos, duracao: float = 0.75) -> None:
+        self.play(FadeOut(VGroup(*objetos)), run_time=duracao)
+
+    def mostrar_pergunta(
+        self,
+        texto: str,
+        *,
+        cor=YELLOW,
+        pausa: float = 0.85,
+    ) -> Text:
+        pergunta = self.pergunta(texto, cor)
+        self.play(Write(pergunta), run_time=0.85)
+        self.wait(pausa)
+        return pergunta
+
+    # ======================================================
+    # EPISÓDIO
+    # ======================================================
+
+    def construct(self) -> None:
+        print(f"✅ A renderizar {VERSAO_LONG}")
+
+        estrelas = self.fundo_estrelado()
+        self.add(estrelas)
+
+        # ==================================================
+        # CENA 1 — ABERTURA CINEMATOGRÁFICA
+        # ==================================================
+
+        sol_hook = self.criar_sol(
+            raio=1.18,
+            posicao=ORIGIN,
+            intensidade=1.0,
+        )
+
+        lua_hook = Circle(
+            radius=1.12,
+            color=WHITE,
+            fill_color=BLACK,
+            fill_opacity=1,
+            stroke_width=2,
+        ).move_to(RIGHT * 5.7)
+
+        self.narrar(
+            "Imagina que estás numa praia ao meio-dia. O céu está limpo, o mar reflete a luz e o Sol brilha com toda a força.",
+            GrowFromCenter(sol_hook),
+        )
+
+        self.narrar(
+            "Mas, sem aviso, uma sombra começa a atravessar lentamente o disco solar.",
+            lua_hook.animate.move_to(RIGHT * 1.85),
+        )
+
+        self.narrar(
+            "A luz torna-se estranha. A temperatura começa a descer. Os pássaros calam-se.",
+            lua_hook.animate.move_to(RIGHT * 0.70),
+        )
+
+        self.narrar(
+            "E poucos minutos depois, o dia parece transformar-se em noite.",
+            lua_hook.animate.move_to(ORIGIN),
+        )
+
+        coroa_hook = VGroup(
+            *[
+                Circle(
+                    radius=1.18 + indice * 0.13,
                     stroke_color=WHITE,
-                    stroke_opacity=max(0.05, 0.34 - indice * 0.045),
-                    stroke_width=2,
+                    stroke_opacity=max(0.10, 0.62 - indice * 0.075),
+                    stroke_width=max(1.3, 5.0 - indice * 0.45),
                 )
                 for indice in range(1, 7)
             ]
         )
 
+        pergunta_abertura = self.mostrar_pergunta(
+            "COMO É QUE ISTO É POSSÍVEL?",
+            cor=YELLOW,
+            pausa=0.95,
+        )
+
         self.narrar(
-            "Mas como consegue a pequena Lua esconder uma estrela gigantesca?",
-            FadeIn(coroa),
+            "Hoje vamos descobrir não apenas como acontece um eclipse, mas também responder às perguntas que quase toda a gente faz quando o vê pela primeira vez.",
+            FadeIn(coroa_hook),
         )
-
-        titulo = Text(
-            "ECLIPSE SOLAR",
-            font_size=58,
-            color=WHITE,
-            weight="BOLD",
-        ).to_edge(UP, buff=0.5)
-
-        subtitulo = Text(
-            "Como acontece, porque só algumas regiões o veem\n"
-            "e porque não ocorre todos os meses",
-            font_size=29,
-            color=GREY_B,
-            line_spacing=0.95,
-        ).next_to(titulo, DOWN, buff=0.35)
-
-        self.play(
-            Write(titulo),
-            FadeIn(subtitulo),
-            run_time=1.3,
-        )
-        self.wait(1)
 
         self.limpar(
-            sol_abertura,
-            lua_abertura,
-            coroa,
-            titulo,
-            subtitulo,
+            sol_hook,
+            lua_hook,
+            coroa_hook,
+            pergunta_abertura,
         )
 
-        # 1 — O QUE É UM ECLIPSE
-        titulo_1 = self.titulo_secao("1. O QUE É UM ECLIPSE SOLAR?")
+        # ==================================================
+        # CENA 2 — PROMESSA
+        # ==================================================
 
-        sol = Circle(
-            radius=0.95,
-            color=YELLOW,
-            fill_color=YELLOW,
-            fill_opacity=1,
-        ).move_to(LEFT * 5.2)
+        titulo_promessa = Text(
+            "HOJE VAIS PERCEBER...",
+            font_size=48,
+            color=WHITE,
+            weight="BOLD",
+        ).to_edge(UP, buff=0.42)
 
-        lua = Circle(
-            radius=0.29,
-            color=GREY_B,
-            fill_color=GREY_B,
-            fill_opacity=1,
-        ).move_to(UP * 1.4)
+        cartões = VGroup(
+            self.etiqueta(
+                "PORQUE A LUA CONSEGUE TAPAR O SOL",
+                LEFT * 3.9 + UP * 1.55,
+                YELLOW,
+                26,
+            ),
+            self.etiqueta(
+                "PORQUE NÃO SE VÊ EM TODO O MUNDO",
+                RIGHT * 3.7 + UP * 1.55,
+                BLUE_B,
+                26,
+            ),
+            self.etiqueta(
+                "PORQUE NÃO ACONTECE TODOS OS MESES",
+                LEFT * 3.8 + DOWN * 0.25,
+                WHITE,
+                24,
+            ),
+            self.etiqueta(
+                "SE OS ANIMAIS PENSAM QUE É NOITE",
+                RIGHT * 3.7 + DOWN * 0.25,
+                ORANGE,
+                25,
+            ),
+            self.etiqueta(
+                "E SE UM DIA OS ECLIPSES VÃO ACABAR",
+                DOWN * 2.05,
+                GREEN,
+                26,
+            ),
+        )
 
-        terra = Circle(
-            radius=0.72,
-            color=BLUE,
-            fill_color=BLUE,
-            fill_opacity=1,
-        ).move_to(RIGHT * 4.8)
+        self.narrar(
+            "Vamos começar pelo alinhamento entre o Sol, a Lua e a Terra.",
+            [
+                Write(titulo_promessa),
+                FadeIn(cartões[0]),
+                FadeIn(cartões[1]),
+            ],
+        )
+
+        self.narrar(
+            "Depois vamos responder às dúvidas mais curiosas: porque só algumas regiões conseguem ver, porque não acontece todos os meses, o que acontece aos animais e se um dia os eclipses totais vão desaparecer.",
+            [
+                FadeIn(cartões[2]),
+                FadeIn(cartões[3]),
+                FadeIn(cartões[4]),
+            ],
+        )
+
+        self.limpar(titulo_promessa, cartões)
+
+        # ==================================================
+        # CENA 3 — O QUE É UM ECLIPSE?
+        # ==================================================
+
+        titulo_1 = self.titulo_secao(
+            "1",
+            "AFINAL, O QUE É UM ECLIPSE SOLAR?",
+        )
+
+        sol = self.criar_sol(
+            raio=0.72,
+            posicao=LEFT * 5.1,
+            intensidade=0.85,
+        )
+
+        lua = self.criar_lua(
+            raio=0.29,
+            posicao=UP * 1.55,
+        )
+
+        terra = self.criar_terra(
+            raio=0.64,
+            posicao=RIGHT * 4.8,
+        )
 
         nomes = VGroup(
-            Text("SOL", font_size=24, color=YELLOW).next_to(sol, DOWN),
-            Text("LUA", font_size=23, color=GREY_B).next_to(lua, UP),
-            Text("TERRA", font_size=24, color=BLUE).next_to(terra, DOWN),
+            Text(
+                "SOL",
+                font_size=25,
+                color=YELLOW,
+                weight="BOLD",
+            ).next_to(sol, DOWN, buff=0.25),
+            Text(
+                "LUA",
+                font_size=24,
+                color=WHITE,
+                weight="BOLD",
+            ).next_to(lua, UP, buff=0.22),
+            Text(
+                "TERRA",
+                font_size=25,
+                color=BLUE_B,
+                weight="BOLD",
+            ).next_to(terra, DOWN, buff=0.25),
         )
 
         self.narrar(
@@ -159,7 +497,7 @@ class Episodio001EclipseLong(CenaLong):
         )
 
         self.narrar(
-            "Ao entrar nessa posição, a Lua bloqueia parte da luz solar que seguiria em direção ao nosso planeta.",
+            "Nesse momento, parte da luz que seguia em direção ao nosso planeta é bloqueada.",
             lua.animate.move_to(LEFT * 0.15),
         )
 
@@ -167,36 +505,35 @@ class Episodio001EclipseLong(CenaLong):
             sol.get_right(),
             lua.get_left(),
             color=YELLOW,
-            stroke_opacity=0.65,
+            stroke_opacity=0.85,
             stroke_width=3,
         )
 
         linha_2 = Line(
             lua.get_right(),
             terra.get_left(),
-            color=GREY_B,
-            stroke_opacity=0.65,
+            color=WHITE,
+            stroke_opacity=0.78,
             stroke_width=3,
         )
 
         self.narrar(
-            "Visto de lado, parece simples: Sol, Lua e Terra quase alinhados.",
+            "Visto de lado, o alinhamento parece simples: Sol, Lua e Terra.",
             [
                 FadeIn(linha_1),
                 FadeIn(linha_2),
             ],
         )
 
-        alinhamento = Text(
-            "SOL  →  LUA  →  TERRA",
-            font_size=38,
-            color=WHITE,
-            weight="BOLD",
-        ).move_to(DOWN * 2.4)
+        pergunta_1 = self.mostrar_pergunta(
+            "MAS A LUA NÃO É MUITO PEQUENA?",
+            cor=YELLOW,
+            pausa=0.80,
+        )
 
         self.narrar(
-            "Mas a palavra quase é importante, porque um pequeno desvio muda completamente o que vemos.",
-            Write(alinhamento),
+            "É. A Lua é muito menor do que o Sol. Mas o segredo não está apenas no tamanho.",
+            FadeOut(pergunta_1),
         )
 
         self.limpar(
@@ -207,30 +544,30 @@ class Episodio001EclipseLong(CenaLong):
             nomes,
             linha_1,
             linha_2,
-            alinhamento,
         )
 
-        # 2 — TAMANHO APARENTE
+        # ==================================================
+        # CENA 4 — TAMANHO E DISTÂNCIA
+        # ==================================================
+
         titulo_2 = self.titulo_secao(
-            "2. COMO PODE A LUA TAPAR O SOL?"
+            "2",
+            "COMO A LUA CONSEGUE ESCONDER O SOL?",
         )
 
-        sol_grande = Circle(
-            radius=1.65,
-            color=YELLOW,
-            fill_color=YELLOW,
-            fill_opacity=1,
-        ).move_to(LEFT * 3.7)
+        sol_grande = self.criar_sol(
+            raio=1.45,
+            posicao=LEFT * 3.9,
+            intensidade=0.92,
+        )
 
-        lua_pequena = Circle(
-            radius=0.25,
-            color=GREY_B,
-            fill_color=GREY_B,
-            fill_opacity=1,
-        ).move_to(RIGHT * 3.5)
+        lua_pequena = self.criar_lua(
+            raio=0.24,
+            posicao=RIGHT * 3.8,
+        )
 
         self.narrar(
-            "A Lua é muito menor do que o Sol. O diâmetro solar é aproximadamente quatrocentas vezes maior.",
+            "O diâmetro do Sol é cerca de quatrocentas vezes maior do que o diâmetro da Lua.",
             [
                 Write(titulo_2),
                 FadeIn(sol_grande),
@@ -243,75 +580,90 @@ class Episodio001EclipseLong(CenaLong):
                 "SOL\n≈ 1,39 milhões de km",
                 font_size=28,
                 color=YELLOW,
-                line_spacing=0.9,
-            ).next_to(sol_grande, DOWN, buff=0.35),
+                line_spacing=0.90,
+            ).next_to(sol_grande, DOWN, buff=0.32),
             Text(
                 "LUA\n≈ 3 474 km",
                 font_size=28,
-                color=GREY_B,
-                line_spacing=0.9,
-            ).next_to(lua_pequena, DOWN, buff=0.35),
+                color=WHITE,
+                line_spacing=0.90,
+            ).next_to(lua_pequena, DOWN, buff=0.32),
         )
 
         self.narrar(
-            "Se estivessem à mesma distância, a Lua pareceria minúscula e nunca conseguiria cobrir o Sol.",
+            "Se os dois estivessem à mesma distância, a Lua pareceria insignificante diante do Sol.",
             FadeIn(medidas),
         )
 
-        terra_observador = Circle(
-            radius=0.58,
-            color=BLUE,
-            fill_color=BLUE,
-            fill_opacity=1,
-        ).move_to(RIGHT * 5.1)
-
-        self.narrar(
-            "O detalhe decisivo é a distância. O Sol também está aproximadamente quatrocentas vezes mais longe da Terra do que a Lua.",
-            [
-                FadeOut(medidas),
-                sol_grande.animate.scale(0.42).move_to(LEFT * 5.2),
-                lua_pequena.animate.scale(1.35).move_to(ORIGIN),
-                FadeIn(terra_observador),
-            ],
+        pergunta_2 = self.mostrar_pergunta(
+            "ENTÃO COMO CONSEGUE TAPÁ-LO?",
+            cor=YELLOW,
+            pausa=0.90,
         )
 
-        raios = VGroup(
+        self.play(
+            FadeOut(pergunta_2),
+            FadeOut(medidas),
+            sol_grande.animate.scale(0.40).move_to(LEFT * 5.2),
+            lua_pequena.animate.scale(1.45).move_to(LEFT * 0.10),
+            run_time=1.1,
+        )
+
+        terra_observador = self.criar_terra(
+            raio=0.56,
+            posicao=RIGHT * 5.0,
+        )
+
+        self.narrar(
+            "Porque o Sol também está aproximadamente quatrocentas vezes mais longe da Terra do que a Lua.",
+            FadeIn(terra_observador),
+        )
+
+        linhas_visao = VGroup(
             DashedLine(
                 terra_observador.get_center(),
                 sol_grande.get_center(),
                 color=YELLOW,
-                dash_length=0.18,
+                dash_length=0.17,
             ),
             DashedLine(
                 terra_observador.get_center(),
                 lua_pequena.get_center(),
-                color=GREY_B,
-                dash_length=0.18,
+                color=WHITE,
+                dash_length=0.17,
             ),
         )
 
         self.narrar(
-            "Por causa desta relação entre tamanho e distância, os dois discos parecem quase iguais no céu.",
-            FadeIn(raios),
+            "Vistos daqui, os dois discos acabam por parecer quase do mesmo tamanho no céu.",
+            FadeIn(linhas_visao),
         )
 
-        aparente_sol = Circle(
-            radius=0.67,
-            stroke_color=YELLOW,
-            stroke_width=8,
-        ).move_to(DOWN * 1.9)
+        discos = VGroup(
+            Circle(
+                radius=0.74,
+                stroke_color=YELLOW,
+                stroke_width=9,
+            ),
+            Circle(
+                radius=0.70,
+                stroke_color=WHITE,
+                stroke_width=5,
+            ),
+        ).move_to(DOWN * 1.90)
 
-        aparente_lua = Circle(
-            radius=0.64,
-            stroke_color=GREY_B,
-            stroke_width=5,
-        ).move_to(DOWN * 1.9)
+        coincidencia = self.etiqueta(
+            "UMA COINCIDÊNCIA CÓSMICA",
+            DOWN * 3.0,
+            YELLOW,
+            30,
+        )
 
         self.narrar(
-            "É uma coincidência cósmica extraordinária: a Lua parece ter precisamente o tamanho necessário para cobrir o Sol.",
+            "É uma coincidência cósmica extraordinária. A Lua parece ter exatamente o tamanho necessário para esconder o Sol.",
             [
-                FadeIn(aparente_sol),
-                FadeIn(aparente_lua),
+                FadeIn(discos),
+                FadeIn(coincidencia),
             ],
         )
 
@@ -320,39 +672,38 @@ class Episodio001EclipseLong(CenaLong):
             sol_grande,
             lua_pequena,
             terra_observador,
-            raios,
-            aparente_sol,
-            aparente_lua,
+            linhas_visao,
+            discos,
+            coincidencia,
         )
 
-        # 3 — UMBRA E PENUMBRA
+        # ==================================================
+        # CENA 5 — SOMBRA, UMBRA E PENUMBRA
+        # ==================================================
+
         titulo_3 = self.titulo_secao(
-            "3. A SOMBRA DA LUA NÃO É TODA IGUAL"
+            "3",
+            "A SOMBRA DA LUA TEM DUAS PARTES",
         )
 
-        sol_sombra = Circle(
-            radius=1.05,
-            color=YELLOW,
-            fill_color=YELLOW,
-            fill_opacity=1,
-        ).move_to(LEFT * 5.3)
+        sol_sombra = self.criar_sol(
+            raio=0.90,
+            posicao=LEFT * 5.15,
+            intensidade=0.75,
+        )
 
-        lua_sombra = Circle(
-            radius=0.32,
-            color=GREY_B,
-            fill_color=GREY_B,
-            fill_opacity=1,
-        ).move_to(LEFT * 0.7)
+        lua_sombra = self.criar_lua(
+            raio=0.31,
+            posicao=LEFT * 0.75,
+        )
 
-        terra_sombra = Circle(
-            radius=0.82,
-            color=BLUE,
-            fill_color=BLUE,
-            fill_opacity=1,
-        ).move_to(RIGHT * 4.9)
+        terra_sombra = self.criar_terra(
+            raio=0.78,
+            posicao=RIGHT * 4.85,
+        )
 
         self.narrar(
-            "A sombra criada pela Lua divide-se em regiões diferentes.",
+            "A sombra criada pela Lua não é toda igual.",
             [
                 Write(titulo_3),
                 FadeIn(sol_sombra),
@@ -363,66 +714,75 @@ class Episodio001EclipseLong(CenaLong):
 
         umbra = Polygon(
             lua_sombra.get_center() + UP * 0.18,
-            terra_sombra.get_center() + UP * 0.16,
-            terra_sombra.get_center() + DOWN * 0.16,
+            terra_sombra.get_center() + UP * 0.13,
+            terra_sombra.get_center() + DOWN * 0.13,
             lua_sombra.get_center() + DOWN * 0.18,
             fill_color=BLACK,
-            fill_opacity=0.92,
+            fill_opacity=0.96,
             stroke_color=WHITE,
-            stroke_opacity=0.25,
+            stroke_opacity=0.30,
         )
 
-        penumbra_superior = Polygon(
-            sol_sombra.get_center() + UP * 0.85,
+        penumbra_1 = Polygon(
+            sol_sombra.get_center() + UP * 0.75,
             lua_sombra.get_center() + UP * 0.22,
             terra_sombra.get_center() + UP * 0.62,
-            terra_sombra.get_center() + UP * 0.18,
+            terra_sombra.get_center() + UP * 0.15,
             fill_color=GREY_B,
             fill_opacity=0.22,
             stroke_opacity=0,
         )
 
-        penumbra_inferior = Polygon(
-            sol_sombra.get_center() + DOWN * 0.85,
+        penumbra_2 = Polygon(
+            sol_sombra.get_center() + DOWN * 0.75,
             lua_sombra.get_center() + DOWN * 0.22,
             terra_sombra.get_center() + DOWN * 0.62,
-            terra_sombra.get_center() + DOWN * 0.18,
+            terra_sombra.get_center() + DOWN * 0.15,
             fill_color=GREY_B,
             fill_opacity=0.22,
             stroke_opacity=0,
         )
 
         self.narrar(
-            "No centro está a umbra, onde a Lua tapa completamente o disco solar.",
+            "No centro existe uma região muito escura chamada umbra.",
             FadeIn(umbra),
         )
 
         self.narrar(
-            "À volta existe a penumbra, onde apenas parte do Sol fica escondida.",
+            "À volta existe uma zona mais clara chamada penumbra.",
             [
-                FadeIn(penumbra_superior),
-                FadeIn(penumbra_inferior),
+                FadeIn(penumbra_1),
+                FadeIn(penumbra_2),
             ],
         )
 
-        rotulos = VGroup(
-            Text(
-                "UMBRA\nECLIPSE TOTAL",
-                font_size=26,
-                color=WHITE,
-                line_spacing=0.85,
-            ).move_to(DOWN * 2.0),
-            Text(
-                "PENUMBRA\nECLIPSE PARCIAL",
-                font_size=26,
-                color=GREY_B,
-                line_spacing=0.85,
-            ).move_to(UP * 2.0),
+        pergunta_3 = self.mostrar_pergunta(
+            "E O QUE MUDA PARA QUEM ESTÁ EM CADA ZONA?",
+            cor=WHITE,
+            pausa=0.80,
+        )
+
+        etiquetas = VGroup(
+            self.etiqueta(
+                "UMBRA = ECLIPSE TOTAL",
+                DOWN * 2.0,
+                WHITE,
+                28,
+            ),
+            self.etiqueta(
+                "PENUMBRA = ECLIPSE PARCIAL",
+                UP * 2.0,
+                GREY_B,
+                26,
+            ),
         )
 
         self.narrar(
-            "Por isso, duas pessoas em cidades diferentes podem observar eclipses muito diferentes no mesmo instante.",
-            FadeIn(rotulos),
+            "Quem está na umbra vê o Sol totalmente coberto. Quem está na penumbra vê apenas uma parte do Sol desaparecer.",
+            [
+                FadeOut(pergunta_3),
+                FadeIn(etiquetas),
+            ],
         )
 
         self.limpar(
@@ -431,475 +791,632 @@ class Episodio001EclipseLong(CenaLong):
             lua_sombra,
             terra_sombra,
             umbra,
-            penumbra_superior,
-            penumbra_inferior,
-            rotulos,
+            penumbra_1,
+            penumbra_2,
+            etiquetas,
         )
 
-        # 4 — REGIÕES
+        # ==================================================
+        # CENA 6 — PORQUE NÃO SE VÊ EM TODAS AS REGIÕES?
+        # ==================================================
+
+        pergunta_regioes = self.mostrar_pergunta(
+            "PORQUE NÃO SE VÊ O ECLIPSE EM TODAS AS REGIÕES?",
+            cor=YELLOW,
+            pausa=1.0,
+        )
+
+        self.play(FadeOut(pergunta_regioes), run_time=0.45)
+
         titulo_4 = self.titulo_secao(
-            "4. PORQUE SÓ ALGUMAS REGIÕES CONSEGUEM VER?"
+            "4",
+            "A SOMBRA PASSA POR UMA FAIXA MUITO ESTREITA",
         )
 
-        terra_grande = Circle(
-            radius=2.45,
-            color=BLUE,
-            fill_color=BLUE_D,
-            fill_opacity=1,
-        ).move_to(LEFT * 1.8)
-
-        faixa_total = Arc(
-            radius=2.15,
-            start_angle=-0.45,
-            angle=1.25,
-            color=BLACK,
-            stroke_width=16,
-        ).move_to(terra_grande)
+        terra_regioes = self.criar_terra(
+            raio=2.25,
+            posicao=LEFT * 1.55,
+        )
 
         faixa_parcial = Arc(
-            radius=2.28,
-            start_angle=-0.65,
-            angle=1.65,
+            radius=2.08,
+            start_angle=-0.72,
+            angle=1.72,
             color=GREY_B,
-            stroke_width=34,
-            stroke_opacity=0.35,
-        ).move_to(terra_grande)
+            stroke_width=38,
+            stroke_opacity=0.34,
+        ).move_to(terra_regioes)
+
+        faixa_total = Arc(
+            radius=1.98,
+            start_angle=-0.50,
+            angle=1.32,
+            color=BLACK,
+            stroke_width=17,
+        ).move_to(terra_regioes)
 
         self.narrar(
-            "Quando a umbra chega à Terra, cobre apenas uma faixa estreita da superfície.",
+            "Porque a umbra chega à Terra como uma mancha muito pequena quando comparada com o tamanho do planeta.",
             [
                 Write(titulo_4),
-                FadeIn(terra_grande),
-                FadeIn(faixa_total),
+                FadeIn(terra_regioes),
                 FadeIn(faixa_parcial),
+                FadeIn(faixa_total),
             ],
         )
 
         cidade_total = Dot(
-            terra_grande.get_center() + RIGHT * 1.6 + UP * 0.4,
+            terra_regioes.get_center() + RIGHT * 1.45 + UP * 0.42,
             radius=0.10,
             color=YELLOW,
         )
 
         cidade_parcial = Dot(
-            terra_grande.get_center() + RIGHT * 0.1 + UP * 1.75,
+            terra_regioes.get_center() + UP * 1.70,
             radius=0.10,
             color=ORANGE,
         )
 
         cidade_fora = Dot(
-            terra_grande.get_center() + LEFT * 1.4 + DOWN * 1.1,
+            terra_regioes.get_center() + LEFT * 1.42 + DOWN * 1.02,
             radius=0.10,
             color=RED,
         )
 
         self.narrar(
-            "Quem estiver dentro da faixa central vê um eclipse total.",
-            FadeIn(cidade_total),
+            "Uma pessoa dentro da faixa central vê um eclipse total.",
+            [
+                FadeIn(cidade_total),
+                FadeIn(
+                    self.etiqueta(
+                        "TOTAL",
+                        RIGHT * 4.8 + UP * 1.35,
+                        YELLOW,
+                        29,
+                    )
+                ),
+            ],
         )
 
         self.narrar(
-            "Quem estiver mais afastado, mas ainda dentro da penumbra, vê apenas um eclipse parcial.",
-            FadeIn(cidade_parcial),
+            "Outra pessoa, algumas centenas de quilómetros ao lado, pode ver apenas um eclipse parcial.",
+            [
+                FadeIn(cidade_parcial),
+                FadeIn(
+                    self.etiqueta(
+                        "PARCIAL",
+                        RIGHT * 4.8,
+                        ORANGE,
+                        29,
+                    )
+                ),
+            ],
         )
 
         self.narrar(
-            "E quem estiver fora de toda a sombra não vê eclipse nenhum.",
-            FadeIn(cidade_fora),
+            "E alguém ainda mais afastado pode não notar absolutamente nada.",
+            [
+                FadeIn(cidade_fora),
+                FadeIn(
+                    self.etiqueta(
+                        "SEM ECLIPSE",
+                        RIGHT * 4.8 + DOWN * 1.35,
+                        RED,
+                        27,
+                    )
+                ),
+            ],
         )
 
         seta_movimento = Arrow(
-            LEFT * 0.8 + DOWN * 2.8,
-            RIGHT * 3.3 + DOWN * 2.8,
+            LEFT * 0.3 + DOWN * 2.85,
+            RIGHT * 4.8 + DOWN * 2.85,
             color=WHITE,
             buff=0,
         )
 
-        texto_movimento = Text(
-            "A sombra desloca-se sobre a Terra",
-            font_size=30,
+        self.narrar(
+            "À medida que a Lua avança e a Terra roda, a sombra desloca-se por uma faixa sobre países, continentes e oceanos.",
+            GrowArrow(seta_movimento),
+        )
+
+        frase_regioes = Text(
+            "O ECLIPSE É O MESMO.\n"
+            "O QUE MUDA É A POSIÇÃO DO OBSERVADOR.",
+            font_size=34,
             color=WHITE,
-        ).next_to(seta_movimento, UP, buff=0.2)
+            weight="BOLD",
+            line_spacing=0.90,
+        ).move_to(RIGHT * 4.4 + UP * 2.55)
+
+        if frase_regioes.width > 6.0:
+            frase_regioes.scale_to_fit_width(6.0)
 
         self.narrar(
-            "Como a Lua continua a mover-se e a Terra também roda, essa faixa atravessa diferentes regiões ao longo do tempo.",
-            [
-                GrowArrow(seta_movimento),
-                Write(texto_movimento),
-            ],
+            "O eclipse não pertence a uma região. É o observador que precisa de estar exatamente no caminho da sombra.",
+            Write(frase_regioes),
         )
 
         self.limpar(
             titulo_4,
-            terra_grande,
-            faixa_total,
+            terra_regioes,
             faixa_parcial,
+            faixa_total,
             cidade_total,
             cidade_parcial,
             cidade_fora,
             seta_movimento,
-            texto_movimento,
+            frase_regioes,
         )
 
-        # 5 — TIPOS
+        # ==================================================
+        # CENA 7 — PORQUE NÃO ACONTECE TODOS OS MESES?
+        # ==================================================
+
+        pergunta_mensal = self.mostrar_pergunta(
+            "SE A LUA DÁ UMA VOLTA TODOS OS MESES...\n"
+            "PORQUE NÃO HÁ UM ECLIPSE TODOS OS MESES?",
+            cor=YELLOW,
+            pausa=1.0,
+        )
+
+        self.play(FadeOut(pergunta_mensal), run_time=0.45)
+
         titulo_5 = self.titulo_secao(
-            "5. TOTAL, PARCIAL OU ANULAR?"
+            "5",
+            "A ÓRBITA DA LUA ESTÁ INCLINADA",
         )
 
-        total_sol = Circle(
-            radius=1.05,
+        terra_orbita = self.criar_terra(
+            raio=0.64,
+            posicao=ORIGIN,
+        )
+
+        plano = Ellipse(
+            width=9.4,
+            height=2.75,
+            color=GREY_B,
+            stroke_opacity=0.44,
+            stroke_width=3,
+        )
+
+        orbita = Ellipse(
+            width=9.4,
+            height=2.75,
             color=YELLOW,
-            fill_color=YELLOW,
-            fill_opacity=1,
-        ).move_to(LEFT * 4.5)
+            stroke_opacity=0.95,
+            stroke_width=4,
+        ).rotate(0.26)
 
-        total_lua = Circle(
-            radius=1.02,
-            color=BLACK,
-            fill_color=BLACK,
-            fill_opacity=1,
-        ).move_to(total_sol)
-
-        parcial_sol = Circle(
-            radius=1.05,
-            color=YELLOW,
-            fill_color=YELLOW,
-            fill_opacity=1,
-        ).move_to(ORIGIN)
-
-        parcial_lua = Circle(
-            radius=1.02,
-            color=BLACK,
-            fill_color=BLACK,
-            fill_opacity=1,
-        ).move_to(ORIGIN + RIGHT * 0.55)
-
-        anular_sol = Circle(
-            radius=1.05,
-            color=YELLOW,
-            fill_color=YELLOW,
-            fill_opacity=1,
-        ).move_to(RIGHT * 4.5)
-
-        anular_lua = Circle(
-            radius=0.78,
-            color=BLACK,
-            fill_color=BLACK,
-            fill_opacity=1,
-        ).move_to(anular_sol)
-
-        rotulos_tipos = VGroup(
-            Text("TOTAL", font_size=28, color=WHITE).next_to(total_sol, DOWN),
-            Text("PARCIAL", font_size=28, color=WHITE).next_to(parcial_sol, DOWN),
-            Text("ANULAR", font_size=28, color=WHITE).next_to(anular_sol, DOWN),
+        lua_orbita = self.criar_lua(
+            raio=0.18,
+            posicao=RIGHT * 4.05 + UP * 1.08,
         )
 
         self.narrar(
-            "Num eclipse total, a Lua cobre completamente o Sol para quem está na umbra.",
+            "A órbita da Lua está inclinada cerca de cinco graus em relação ao plano da órbita terrestre.",
             [
                 Write(titulo_5),
-                FadeIn(total_sol),
-                FadeIn(total_lua),
-                FadeIn(rotulos_tipos[0]),
-            ],
-        )
-
-        self.narrar(
-            "Num eclipse parcial, apenas uma parte do Sol desaparece.",
-            [
-                FadeIn(parcial_sol),
-                FadeIn(parcial_lua),
-                FadeIn(rotulos_tipos[1]),
-            ],
-        )
-
-        self.narrar(
-            "Num eclipse anular, a Lua parece menor e deixa um anel brilhante à volta.",
-            [
-                FadeIn(anular_sol),
-                FadeIn(anular_lua),
-                FadeIn(rotulos_tipos[2]),
-            ],
-        )
-
-        self.limpar(
-            titulo_5,
-            total_sol,
-            total_lua,
-            parcial_sol,
-            parcial_lua,
-            anular_sol,
-            anular_lua,
-            rotulos_tipos,
-        )
-
-        # 6 — PORQUE NÃO TODOS OS MESES
-        titulo_6 = self.titulo_secao(
-            "6. PORQUE NÃO HÁ ECLIPSE TODOS OS MESES?"
-        )
-
-        terra_orbita = Circle(
-            radius=0.72,
-            color=BLUE,
-            fill_color=BLUE,
-            fill_opacity=1,
-        )
-
-        orbita_horizontal = Ellipse(
-            width=8.2,
-            height=2.8,
-            color=GREY_B,
-            stroke_opacity=0.45,
-        )
-
-        orbita_inclinada = Ellipse(
-            width=8.2,
-            height=2.8,
-            color=YELLOW,
-            stroke_opacity=0.9,
-        ).rotate(0.28)
-
-        lua_orbita = Dot(
-            point=RIGHT * 3.7 + UP * 0.95,
-            radius=0.15,
-            color=GREY_B,
-        )
-
-        self.narrar(
-            "Se a Lua completa uma volta à Terra todos os meses, porque não existe um eclipse mensal?",
-            [
-                Write(titulo_6),
                 FadeIn(terra_orbita),
-                FadeIn(orbita_horizontal),
-                FadeIn(orbita_inclinada),
+                FadeIn(plano),
+                FadeIn(orbita),
                 FadeIn(lua_orbita),
             ],
         )
 
         self.narrar(
-            "Porque a órbita da Lua está inclinada cerca de cinco graus em relação ao plano da órbita terrestre.",
+            "Por isso, na maioria das luas novas, a Lua passa ligeiramente acima ou abaixo da linha entre o Sol e a Terra.",
         )
 
-        acima = Text(
-            "A LUA PASSA\nACIMA OU ABAIXO",
-            font_size=36,
-            color=WHITE,
-            weight="BOLD",
-            line_spacing=0.9,
-        ).move_to(DOWN * 2.5)
-
-        self.narrar(
-            "Na maioria das luas novas, ela passa ligeiramente acima ou abaixo da linha entre o Sol e a Terra.",
-            Write(acima),
-        )
-
-        nodo_1 = Dot(
-            point=LEFT * 3.7 + DOWN * 0.95,
-            radius=0.11,
-            color=RED,
-        )
-
-        nodo_2 = Dot(
-            point=RIGHT * 3.7 + UP * 0.95,
-            radius=0.11,
-            color=RED,
+        nodos = VGroup(
+            Dot(
+                point=LEFT * 4.05 + DOWN * 1.08,
+                radius=0.11,
+                color=RED,
+            ),
+            Dot(
+                point=RIGHT * 4.05 + UP * 1.08,
+                radius=0.11,
+                color=RED,
+            ),
         )
 
         linha_nodos = DashedLine(
-            nodo_1.get_center(),
-            nodo_2.get_center(),
+            nodos[0].get_center(),
+            nodos[1].get_center(),
             color=RED,
-            dash_length=0.15,
+            dash_length=0.16,
         )
 
         self.narrar(
-            "Os eclipses só acontecem perto dos pontos em que as duas órbitas se cruzam, chamados nós.",
+            "Só quando a Lua passa perto dos pontos onde os dois planos se cruzam é que pode ocorrer um eclipse.",
             [
-                FadeOut(acima),
-                FadeIn(nodo_1),
-                FadeIn(nodo_2),
+                FadeIn(nodos),
                 FadeIn(linha_nodos),
             ],
         )
 
-        self.limpar(
-            titulo_6,
-            terra_orbita,
-            orbita_horizontal,
-            orbita_inclinada,
-            lua_orbita,
-            nodo_1,
-            nodo_2,
-            linha_nodos,
-        )
-
-        # 7 — DURAÇÃO
-        titulo_7 = self.titulo_secao(
-            "7. PORQUE A TOTALIDADE DURA TÃO POUCO?"
-        )
-
-        faixa = Rectangle(
-            width=10.5,
-            height=0.65,
-            fill_color=GREY_B,
-            fill_opacity=0.25,
-            stroke_color=GREY_B,
-            stroke_opacity=0.4,
-        )
-
-        sombra_movel = Circle(
-            radius=0.33,
-            color=BLACK,
-            fill_color=BLACK,
-            fill_opacity=1,
-        ).move_to(LEFT * 5.0)
-
-        observador = Dot(
-            point=ORIGIN,
-            radius=0.11,
-            color=YELLOW,
+        resposta_mensal = self.etiqueta(
+            "O ALINHAMENTO PERFEITO É RARO",
+            DOWN * 2.55,
+            YELLOW,
+            30,
         )
 
         self.narrar(
-            "A umbra é pequena e desloca-se rapidamente sobre a superfície terrestre.",
+            "Portanto, não basta existir uma Lua nova. É preciso que o alinhamento aconteça no ponto certo.",
+            FadeIn(resposta_mensal),
+        )
+
+        self.limpar(
+            titulo_5,
+            terra_orbita,
+            plano,
+            orbita,
+            lua_orbita,
+            nodos,
+            linha_nodos,
+            resposta_mensal,
+        )
+
+        # ==================================================
+        # CENA 8 — TIPOS DE ECLIPSE
+        # ==================================================
+
+        titulo_6 = self.titulo_secao(
+            "6",
+            "TODOS OS ECLIPSES SÃO IGUAIS?",
+        )
+
+        pergunta_tipos = self.mostrar_pergunta(
+            "TOTAL, PARCIAL OU ANULAR...\n"
+            "QUAL É A DIFERENÇA?",
+            cor=WHITE,
+            pausa=0.75,
+        )
+
+        self.play(FadeOut(pergunta_tipos), run_time=0.4)
+
+        posicoes = [
+            LEFT * 4.8,
+            ORIGIN,
+            RIGHT * 4.8,
+        ]
+
+        sois = VGroup(
+            *[
+                Circle(
+                    radius=0.82,
+                    color=YELLOW,
+                    fill_color=YELLOW,
+                    fill_opacity=1,
+                ).move_to(posicao)
+                for posicao in posicoes
+            ]
+        )
+
+        luas = VGroup(
+            Circle(
+                radius=0.80,
+                color=BLACK,
+                fill_color=BLACK,
+                fill_opacity=1,
+            ).move_to(posicoes[0]),
+            Circle(
+                radius=0.80,
+                color=BLACK,
+                fill_color=BLACK,
+                fill_opacity=1,
+            ).move_to(posicoes[1] + RIGHT * 0.42),
+            Circle(
+                radius=0.60,
+                color=BLACK,
+                fill_color=BLACK,
+                fill_opacity=1,
+            ).move_to(posicoes[2]),
+        )
+
+        nomes = VGroup(
+            Text(
+                "TOTAL",
+                font_size=28,
+                color=WHITE,
+                weight="BOLD",
+            ).next_to(sois[0], DOWN, buff=0.28),
+            Text(
+                "PARCIAL",
+                font_size=28,
+                color=WHITE,
+                weight="BOLD",
+            ).next_to(sois[1], DOWN, buff=0.28),
+            Text(
+                "ANULAR",
+                font_size=28,
+                color=WHITE,
+                weight="BOLD",
+            ).next_to(sois[2], DOWN, buff=0.28),
+        )
+
+        self.narrar(
+            "Num eclipse total, a Lua cobre completamente o disco solar para quem está dentro da umbra.",
             [
-                Write(titulo_7),
-                FadeIn(faixa),
-                FadeIn(sombra_movel),
-                FadeIn(observador),
+                Write(titulo_6),
+                FadeIn(sois[0]),
+                FadeIn(luas[0]),
+                FadeIn(nomes[0]),
             ],
         )
 
         self.narrar(
-            "Para uma pessoa num único lugar, a sombra passa e vai embora em poucos minutos.",
-            sombra_movel.animate.move_to(RIGHT * 5.0),
+            "Num eclipse parcial, os discos não ficam totalmente sobrepostos.",
+            [
+                FadeIn(sois[1]),
+                FadeIn(luas[1]),
+                FadeIn(nomes[1]),
+            ],
         )
-
-        relogio = Text(
-            "TOTALIDADE:\nAPENAS ALGUNS MINUTOS",
-            font_size=38,
-            color=YELLOW,
-            weight="BOLD",
-            line_spacing=0.9,
-        ).move_to(DOWN * 2.1)
 
         self.narrar(
-            "Por isso, mesmo durante um grande eclipse, a fase total é breve.",
-            Write(relogio),
+            "Num eclipse anular, a Lua está mais distante, parece menor e deixa um anel de luz em redor.",
+            [
+                FadeIn(sois[2]),
+                FadeIn(luas[2]),
+                FadeIn(nomes[2]),
+            ],
         )
 
-        self.limpar(
-            titulo_7,
-            faixa,
-            sombra_movel,
-            observador,
-            relogio,
+        self.limpar(titulo_6, sois, luas, nomes)
+
+        # ==================================================
+        # CENA 9 — OS ANIMAIS PENSAM QUE É NOITE?
+        # ==================================================
+
+        pergunta_animais = self.mostrar_pergunta(
+            "SERÁ QUE OS ANIMAIS PENSAM QUE JÁ É NOITE?",
+            cor=ORANGE,
+            pausa=1.0,
         )
 
-        # 8 — NATUREZA
-        titulo_8 = self.titulo_secao(
-            "8. O QUE MUDA DURANTE A TOTALIDADE?"
+        self.play(FadeOut(pergunta_animais), run_time=0.45)
+
+        titulo_7 = self.titulo_secao(
+            "7",
+            "A NATUREZA REAGE À MUDANÇA DA LUZ",
         )
+
+        ceu_dia = Rectangle(
+            width=4.4,
+            height=3.1,
+            fill_color=BLUE_B,
+            fill_opacity=1,
+            stroke_opacity=0,
+        ).move_to(LEFT * 3.8)
+
+        ceu_noite = Rectangle(
+            width=4.4,
+            height=3.1,
+            fill_color=BLACK,
+            fill_opacity=1,
+            stroke_color=WHITE,
+            stroke_opacity=0.25,
+        ).move_to(LEFT * 3.8)
+
+        passaro = VGroup(
+            Arc(
+                radius=0.42,
+                start_angle=0.20,
+                angle=2.6,
+                color=ORANGE,
+                stroke_width=5,
+            ),
+            Arc(
+                radius=0.42,
+                start_angle=0.35,
+                angle=2.6,
+                color=ORANGE,
+                stroke_width=5,
+            ).flip(),
+        ).move_to(RIGHT * 0.4 + UP * 0.9)
+
+        inseto = VGroup(
+            Circle(
+                radius=0.24,
+                color=GREEN,
+                fill_color=GREEN,
+                fill_opacity=1,
+            ),
+            Line(
+                LEFT * 0.20,
+                RIGHT * 0.20,
+                color=WHITE,
+                stroke_width=2,
+            ),
+        ).move_to(RIGHT * 3.9 + DOWN * 0.1)
 
         termometro = VGroup(
             Rectangle(
-                width=0.45,
-                height=3.1,
+                width=0.38,
+                height=2.7,
                 color=WHITE,
                 fill_opacity=0,
             ),
             Rectangle(
-                width=0.25,
-                height=2.5,
+                width=0.20,
+                height=2.15,
                 color=RED,
                 fill_color=RED,
                 fill_opacity=1,
             ).align_to(ORIGIN, DOWN),
             Circle(
-                radius=0.38,
+                radius=0.32,
                 color=RED,
                 fill_color=RED,
                 fill_opacity=1,
-            ).shift(DOWN * 1.7),
-        ).move_to(LEFT * 4.5)
-
-        ceu_dia = Rectangle(
-            width=4.2,
-            height=3.2,
-            fill_color=BLUE_B,
-            fill_opacity=1,
-            stroke_opacity=0,
-        ).move_to(ORIGIN)
-
-        ceu_noite = Rectangle(
-            width=4.2,
-            height=3.2,
-            fill_color=BLACK,
-            fill_opacity=1,
-            stroke_opacity=0,
-        ).move_to(ORIGIN)
-
-        animal = Circle(
-            radius=0.45,
-            color=ORANGE,
-            fill_color=ORANGE,
-            fill_opacity=1,
-        ).move_to(RIGHT * 4.5)
+            ).shift(DOWN * 1.48),
+        ).move_to(RIGHT * 2.2)
 
         self.narrar(
-            "Quando a luz solar diminui rapidamente, a temperatura pode descer e o ambiente muda de forma percetível.",
+            "Muitos animais não compreendem o eclipse como nós. Mas reagem à rápida mudança de luz e temperatura.",
             [
-                Write(titulo_8),
-                FadeIn(termometro),
+                Write(titulo_7),
                 FadeIn(ceu_dia),
-                FadeIn(animal),
+                FadeIn(passaro),
+                FadeIn(inseto),
+                FadeIn(termometro),
             ],
         )
 
         self.narrar(
-            "O céu escurece o suficiente para revelar estrelas e planetas brilhantes.",
+            "Algumas aves deixam de cantar e procuram abrigo, como fariam ao anoitecer.",
             FadeIn(ceu_noite),
         )
 
-        comportamento = Text(
-            "ALGUNS ANIMAIS\nCOMPORTAM-SE COMO SE FOSSE NOITE",
-            font_size=32,
+        self.narrar(
+            "Alguns insetos noturnos tornam-se ativos, enquanto outros animais ficam inquietos ou confusos.",
+        )
+
+        resposta_animais = Text(
+            "NÃO PENSAM: «CHEGOU A NOITE».\n"
+            "MAS O CORPO REAGE COMO SE A NOITE ESTIVESSE A COMEÇAR.",
+            font_size=31,
             color=WHITE,
             weight="BOLD",
-            line_spacing=0.9,
-        ).move_to(DOWN * 2.3)
+            line_spacing=0.90,
+        ).move_to(DOWN * 2.35)
+
+        if resposta_animais.width > 12.4:
+            resposta_animais.scale_to_fit_width(12.4)
 
         self.narrar(
-            "Alguns animais regressam aos locais onde dormem, enquanto outros iniciam atividades noturnas.",
-            Write(comportamento),
+            "Portanto, não é que pensem conscientemente que chegou a noite. O comportamento muda porque os sinais do ambiente mudaram.",
+            Write(resposta_animais),
         )
 
         self.limpar(
-            titulo_8,
-            termometro,
+            titulo_7,
             ceu_dia,
             ceu_noite,
-            animal,
-            comportamento,
+            passaro,
+            inseto,
+            termometro,
+            resposta_animais,
         )
 
-        # 9 — SEGURANÇA
-        titulo_9 = self.titulo_secao(
-            "9. COMO OBSERVAR EM SEGURANÇA?"
+        # ==================================================
+        # CENA 10 — PORQUE A TEMPERATURA DESCE?
+        # ==================================================
+
+        pergunta_temperatura = self.mostrar_pergunta(
+            "PORQUE É QUE A TEMPERATURA DESCE?",
+            cor=BLUE_B,
+            pausa=0.85,
         )
 
-        sol_seguranca = Circle(
-            radius=1.15,
-            color=YELLOW,
-            fill_color=YELLOW,
+        self.play(FadeOut(pergunta_temperatura), run_time=0.4)
+
+        sol_calor = self.criar_sol(
+            raio=0.90,
+            posicao=LEFT * 4.8,
+            intensidade=0.85,
+        )
+
+        solo = Rectangle(
+            width=4.5,
+            height=1.05,
+            fill_color=ORANGE,
+            fill_opacity=0.70,
+            stroke_opacity=0,
+        ).move_to(RIGHT * 3.8 + DOWN * 1.8)
+
+        raios_calor = VGroup(
+            *[
+                Arrow(
+                    sol_calor.get_right() + UP * deslocamento,
+                    solo.get_left() + UP * deslocamento * 0.35,
+                    color=YELLOW,
+                    buff=0.15,
+                )
+                for deslocamento in (-0.55, 0, 0.55)
+            ]
+        )
+
+        self.narrar(
+            "Normalmente, o solo recebe continuamente energia do Sol.",
+            [
+                FadeIn(sol_calor),
+                FadeIn(solo),
+                FadeIn(raios_calor),
+            ],
+        )
+
+        lua_bloqueio = Circle(
+            radius=0.62,
+            color=BLACK,
+            fill_color=BLACK,
             fill_opacity=1,
-        ).move_to(LEFT * 3.2)
+            stroke_color=WHITE,
+            stroke_width=2,
+        ).move_to(LEFT * 1.7)
+
+        self.narrar(
+            "Quando a Lua bloqueia grande parte dessa luz, o solo deixa de receber tanta energia durante alguns minutos.",
+            FadeIn(lua_bloqueio),
+        )
+
+        seta_descida = Arrow(
+            RIGHT * 4.3 + UP * 1.25,
+            RIGHT * 4.3 + DOWN * 0.75,
+            color=BLUE_B,
+        )
+
+        temperatura = Text(
+            "TEMPERATURA ↓",
+            font_size=39,
+            color=BLUE_B,
+            weight="BOLD",
+        ).next_to(seta_descida, RIGHT, buff=0.25)
+
+        self.narrar(
+            "O ar junto ao solo começa a arrefecer, e a descida pode ser sentida pelas pessoas e pelos animais.",
+            [
+                GrowArrow(seta_descida),
+                Write(temperatura),
+            ],
+        )
+
+        self.limpar(
+            sol_calor,
+            solo,
+            raios_calor,
+            lua_bloqueio,
+            seta_descida,
+            temperatura,
+        )
+
+        # ==================================================
+        # CENA 11 — É SEGURO OLHAR?
+        # ==================================================
+
+        pergunta_segurança = self.mostrar_pergunta(
+            "É SEGURO OLHAR DIRETAMENTE PARA UM ECLIPSE?",
+            cor=RED,
+            pausa=1.0,
+        )
+
+        self.play(FadeOut(pergunta_segurança), run_time=0.45)
+
+        sol_seguro = self.criar_sol(
+            raio=0.92,
+            posicao=LEFT * 3.8,
+            intensidade=0.85,
+        )
 
         olho = VGroup(
             Ellipse(
-                width=2.2,
-                height=1.1,
+                width=2.3,
+                height=1.12,
                 color=WHITE,
+                stroke_width=3,
             ),
             Circle(
                 radius=0.28,
@@ -913,36 +1430,36 @@ class Episodio001EclipseLong(CenaLong):
                 fill_color=BLACK,
                 fill_opacity=1,
             ),
-        ).move_to(RIGHT * 3.2)
+        ).move_to(RIGHT * 3.8)
 
         seta_perigo = Arrow(
-            sol_seguranca.get_right(),
+            sol_seguro.get_right(),
             olho.get_left(),
             color=RED,
-            buff=0.2,
+            buff=0.25,
         )
 
         self.narrar(
-            "Olhar diretamente para o Sol sem proteção adequada pode causar lesões graves nos olhos.",
+            "Não. Olhar diretamente para o Sol sem proteção adequada pode causar lesões graves nos olhos.",
             [
-                Write(titulo_9),
-                FadeIn(sol_seguranca),
+                FadeIn(sol_seguro),
                 FadeIn(olho),
                 GrowArrow(seta_perigo),
             ],
         )
 
         filtro = Rectangle(
-            width=1.0,
-            height=1.7,
+            width=1.05,
+            height=1.75,
             color=GREEN,
             fill_color=BLACK,
-            fill_opacity=0.75,
+            fill_opacity=0.92,
+            stroke_width=3,
         ).move_to(ORIGIN)
 
         setas_seguras = VGroup(
             Arrow(
-                sol_seguranca.get_right(),
+                sol_seguro.get_right(),
                 filtro.get_left(),
                 color=GREEN,
                 buff=0.15,
@@ -956,7 +1473,7 @@ class Episodio001EclipseLong(CenaLong):
         )
 
         self.narrar(
-            "Durante as fases parciais, devem ser usados filtros solares próprios, e não óculos escuros comuns.",
+            "Durante as fases parciais ou anulares, é necessário usar filtros solares próprios e certificados.",
             [
                 FadeOut(seta_perigo),
                 FadeIn(filtro),
@@ -965,107 +1482,254 @@ class Episodio001EclipseLong(CenaLong):
             ],
         )
 
-        aviso = Text(
-            "PROTEÇÃO CERTIFICADA\nSEMPRE QUE O SOL AINDA É VISÍVEL",
-            font_size=34,
-            color=GREEN,
-            weight="BOLD",
-            line_spacing=0.9,
-        ).move_to(DOWN * 2.4)
+        aviso = self.etiqueta(
+            "ÓCULOS ESCUROS COMUNS NÃO PROTEGEM",
+            DOWN * 2.25,
+            RED,
+            29,
+        )
 
         self.narrar(
-            "Se alguma parte brilhante do Sol ainda estiver visível, os olhos precisam de proteção.",
-            Write(aviso),
+            "Óculos escuros comuns não são suficientes.",
+            FadeIn(aviso),
+        )
+
+        self.narrar(
+            "A regra é simples: enquanto qualquer parte brilhante do Sol estiver visível, os olhos precisam de proteção adequada.",
         )
 
         self.limpar(
-            titulo_9,
-            sol_seguranca,
+            sol_seguro,
             olho,
             filtro,
             setas_seguras,
             aviso,
+        )
+
+        # ==================================================
+        # CENA 12 — OS ECLIPSES VÃO ACABAR?
+        # ==================================================
+
+        pergunta_futuro = self.mostrar_pergunta(
+            "SERÁ QUE UM DIA VÃO DEIXAR DE EXISTIR ECLIPSES TOTAIS?",
+            cor=GREEN,
+            pausa=1.0,
+        )
+
+        self.play(FadeOut(pergunta_futuro), run_time=0.45)
+
+        terra_futuro = self.criar_terra(
+            raio=0.72,
+            posicao=LEFT * 4.4,
+        )
+
+        lua_futuro = self.criar_lua(
+            raio=0.30,
+            posicao=LEFT * 1.7,
+        )
+
+        sol_futuro = self.criar_sol(
+            raio=0.86,
+            posicao=RIGHT * 4.6,
+            intensidade=0.75,
+        )
+
+        self.narrar(
+            "Sim, num futuro muito distante. A Lua está lentamente a afastar-se da Terra.",
+            [
+                FadeIn(terra_futuro),
+                FadeIn(lua_futuro),
+                FadeIn(sol_futuro),
+            ],
+        )
+
+        taxa = self.etiqueta(
+            "≈ 3,8 CENTÍMETROS POR ANO",
+            DOWN * 2.25,
+            YELLOW,
+            31,
+        )
+
+        self.narrar(
+            "A distância aumenta cerca de três vírgula oito centímetros por ano.",
+            [
+                lua_futuro.animate.shift(RIGHT * 0.95),
+                FadeIn(taxa),
+            ],
+        )
+
+        anel = Circle(
+            radius=0.56,
+            stroke_color=YELLOW,
+            stroke_width=9,
+        ).move_to(RIGHT * 1.0)
+
+        lua_menor = Circle(
+            radius=0.40,
+            color=BLACK,
+            fill_color=BLACK,
+            fill_opacity=1,
+        ).move_to(RIGHT * 1.0)
+
+        self.narrar(
+            "À medida que se afasta, a Lua parece cada vez menor vista daqui.",
+            [
+                FadeOut(taxa),
+                FadeIn(anel),
+                FadeIn(lua_menor),
+            ],
+        )
+
+        futuro = Text(
+            "UM DIA, A LUA PARECERÁ\n"
+            "PEQUENA DEMAIS PARA COBRIR TODO O SOL.",
+            font_size=36,
+            color=WHITE,
+            weight="BOLD",
+            line_spacing=0.90,
+        ).move_to(DOWN * 2.20)
+
+        self.narrar(
+            "Um dia, já não parecerá suficientemente grande para produzir eclipses totais.",
+            Write(futuro),
+        )
+
+        alivio = self.etiqueta(
+            "AINDA FALTAM CENTENAS DE MILHÕES DE ANOS",
+            UP * 2.45,
+            GREEN,
+            27,
+        )
+
+        self.narrar(
+            "Mas isso só acontecerá daqui a centenas de milhões de anos.",
+            FadeIn(alivio),
+        )
+
+        self.limpar(
+            terra_futuro,
+            lua_futuro,
+            sol_futuro,
+            anel,
+            lua_menor,
+            futuro,
+            alivio,
             estrelas,
         )
 
-        # 10 — RESUMO
+        # ==================================================
+        # CENA 13 — RESUMO FINAL
+        # ==================================================
+
         resumo_titulo = Text(
-            "AGORA JÁ SABES",
-            font_size=50,
+            "AGORA JÁ CONSEGUES EXPLICAR UM ECLIPSE",
+            font_size=45,
             color=WHITE,
             weight="BOLD",
-        ).to_edge(UP, buff=0.5)
+        ).to_edge(UP, buff=0.45)
+
+        if resumo_titulo.width > 12.8:
+            resumo_titulo.scale_to_fit_width(12.8)
 
         resumo = VGroup(
             Text(
-                "1. A Lua passa entre o Sol e a Terra.",
+                "A Lua passa entre o Sol e a Terra.",
                 font_size=31,
                 color=WHITE,
             ),
             Text(
-                "2. A umbra cria a faixa do eclipse total.",
+                "A umbra cria o eclipse total.",
                 font_size=31,
                 color=WHITE,
             ),
             Text(
-                "3. A penumbra cria o eclipse parcial.",
+                "A penumbra cria o eclipse parcial.",
                 font_size=31,
                 color=WHITE,
             ),
             Text(
-                "4. A órbita inclinada impede eclipses mensais.",
+                "A sombra só atravessa algumas regiões.",
                 font_size=31,
                 color=WHITE,
             ),
             Text(
-                "5. A proteção ocular continua essencial.",
+                "A órbita inclinada impede eclipses mensais.",
+                font_size=31,
+                color=WHITE,
+            ),
+            Text(
+                "A distância faz a Lua parecer do tamanho do Sol.",
                 font_size=31,
                 color=WHITE,
             ),
         ).arrange(
             DOWN,
             aligned_edge=LEFT,
-            buff=0.35,
-        ).move_to(DOWN * 0.3)
+            buff=0.28,
+        ).move_to(DOWN * 0.10)
 
         self.narrar(
-            "Um eclipse solar não é o desaparecimento do Sol.",
+            "Um eclipse não é o desaparecimento do Sol.",
             Write(resumo_titulo),
         )
 
         self.narrar(
-            "É o resultado de tamanhos, distâncias, órbitas e sombras que, durante alguns minutos, se combinam de forma quase perfeita.",
+            "É o resultado de tamanhos, distâncias, órbitas e sombras que se combinam de uma forma quase perfeita.",
             FadeIn(resumo),
         )
+
+        self.limpar(resumo_titulo, resumo)
 
         frase_final = Text(
             "UMA PEQUENA LUA.\n"
             "UMA SOMBRA ESTREITA.\n"
             "UM ESPETÁCULO GIGANTE.",
-            font_size=42,
+            font_size=44,
             color=YELLOW,
             weight="BOLD",
-            line_spacing=0.9,
+            line_spacing=0.90,
         )
-
-        self.limpar(resumo_titulo, resumo)
 
         self.narrar(
             "Uma pequena Lua, uma sombra estreita e um dos maiores espetáculos que podemos observar no céu.",
             Write(frase_final),
         )
 
-        assinatura = Text(
-            "APRENDER MESMO",
-            font_size=30,
-            color=GREY_B,
-            weight="BOLD",
-        ).next_to(frase_final, DOWN, buff=0.65)
+        self.play(FadeOut(frase_final), run_time=0.6)
 
-        self.play(FadeIn(assinatura), run_time=0.7)
-        self.wait(2)
+        proximo = Text(
+            "PRÓXIMO EPISÓDIO:\n"
+            "PORQUE A LUA NÃO CAI SOBRE A TERRA?",
+            font_size=39,
+            color=WHITE,
+            weight="BOLD",
+            line_spacing=0.90,
+        )
+
+        if proximo.width > 12.5:
+            proximo.scale_to_fit_width(12.5)
+
+        self.narrar(
+            "No próximo episódio, vamos descobrir porque a Lua nunca cai sobre a Terra.",
+            Write(proximo),
+        )
+
+        assinatura = Text(
+            "SEGUE O CANAL APRENDER MESMO",
+            font_size=34,
+            color=YELLOW,
+            weight="BOLD",
+        ).next_to(proximo, DOWN, buff=0.55)
+
+        self.narrar(
+            "Segue o canal Aprender Mesmo e continua a descobrir o Universo de forma simples e visual.",
+            FadeIn(assinatura),
+            mostrar_legenda=False,
+        )
+
+        self.wait(1.5)
 
         self.play(
-            FadeOut(VGroup(frase_final, assinatura)),
+            FadeOut(VGroup(proximo, assinatura)),
             run_time=0.8,
         )
