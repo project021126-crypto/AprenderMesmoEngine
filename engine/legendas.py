@@ -14,17 +14,16 @@ from manim import (
 def criar_legenda(
     texto: str,
     tamanho_fonte: int = 34,
-    margem_inferior: float = 0.42,
+    margem_inferior: float = 0.58,
     margem_horizontal: float = 0.30,
-    margem_vertical: float = 0.22,
+    margem_vertical: float = 0.24,
 ) -> VGroup:
     """
-    Cria uma legenda forte e legível para Short e Long.
+    Cria uma legenda intensa, nítida e segura para Short e Long.
 
-    - texto branco intenso;
-    - fundo preto mais opaco;
-    - largura segura;
-    - posição acima dos controlos das plataformas.
+    A posição e a largura são calculadas a partir do enquadramento
+    real da câmara, evitando texto cortado ou escondido pelos
+    controlos das plataformas.
     """
 
     texto = texto.strip()
@@ -32,14 +31,18 @@ def criar_legenda(
     if not texto:
         raise ValueError("O texto da legenda não pode estar vazio.")
 
-    largura_maxima = config.frame_width - 0.95
+    largura_maxima = config.frame_width - 0.65
 
     legenda = Text(
         texto,
         font_size=tamanho_fonte,
         color=WHITE,
-        line_spacing=0.92,
         weight="BOLD",
+        line_spacing=0.94,
+        fill_opacity=1.0,
+        stroke_color=BLACK,
+        stroke_width=0.8,
+        stroke_opacity=0.95,
     )
 
     if legenda.width > largura_maxima:
@@ -50,21 +53,16 @@ def criar_legenda(
         height=legenda.height + margem_vertical * 2,
         corner_radius=0.14,
         fill_color=BLACK,
-        fill_opacity=0.92,
+        fill_opacity=0.97,
         stroke_color=WHITE,
-        stroke_opacity=0.15,
-        stroke_width=1,
+        stroke_opacity=0.40,
+        stroke_width=1.5,
     )
-
-    grupo = VGroup(fundo, legenda)
 
     legenda.move_to(fundo.get_center())
 
-    grupo.to_edge(
-        DOWN,
-        buff=margem_inferior,
-    )
-
+    grupo = VGroup(fundo, legenda)
+    grupo.to_edge(DOWN, buff=margem_inferior)
     grupo.set_z_index(1000)
 
     return grupo
