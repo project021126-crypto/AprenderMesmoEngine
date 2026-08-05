@@ -14,13 +14,17 @@ from manim import (
 def criar_legenda(
     texto: str,
     tamanho_fonte: int = 34,
-    margem_inferior: float = 0.32,
-    margem_horizontal: float = 0.28,
-    margem_vertical: float = 0.20,
+    margem_inferior: float = 0.42,
+    margem_horizontal: float = 0.30,
+    margem_vertical: float = 0.22,
 ) -> VGroup:
     """
-    Cria uma legenda adaptada automaticamente ao formato
-    Short 9:16 ou Long 16:9.
+    Cria uma legenda forte e legível para Short e Long.
+
+    - texto branco intenso;
+    - fundo preto mais opaco;
+    - largura segura;
+    - posição acima dos controlos das plataformas.
     """
 
     texto = texto.strip()
@@ -28,13 +32,14 @@ def criar_legenda(
     if not texto:
         raise ValueError("O texto da legenda não pode estar vazio.")
 
-    largura_maxima = config.frame_width - 0.75
+    largura_maxima = config.frame_width - 0.95
 
     legenda = Text(
         texto,
         font_size=tamanho_fonte,
         color=WHITE,
-        line_spacing=0.9,
+        line_spacing=0.92,
+        weight="BOLD",
     )
 
     if legenda.width > largura_maxima:
@@ -45,14 +50,21 @@ def criar_legenda(
         height=legenda.height + margem_vertical * 2,
         corner_radius=0.14,
         fill_color=BLACK,
-        fill_opacity=0.76,
-        stroke_opacity=0,
+        fill_opacity=0.92,
+        stroke_color=WHITE,
+        stroke_opacity=0.15,
+        stroke_width=1,
     )
 
     grupo = VGroup(fundo, legenda)
+
     legenda.move_to(fundo.get_center())
 
-    grupo.to_edge(DOWN, buff=margem_inferior)
-    grupo.set_z_index(100)
+    grupo.to_edge(
+        DOWN,
+        buff=margem_inferior,
+    )
+
+    grupo.set_z_index(1000)
 
     return grupo
