@@ -7,6 +7,7 @@ from manim import (
     ORIGIN,
     RIGHT,
     UP,
+    DOWN,
     Circle,
     FadeIn,
     FadeOut,
@@ -18,43 +19,33 @@ from manim import (
     TAU,
 )
 
-from engine.biblioteca.astronomia.CameraRig import (
-    CameraRig,
-)
-
-from engine.biblioteca.astronomia.LensFlare import (
-    LensFlare,
-)
-
-from engine.biblioteca.astronomia.SolarGlow import (
-    SolarGlow,
-)
-
+from engine.biblioteca.astronomia.CameraRig import CameraRig
+from engine.biblioteca.astronomia.LensFlare import LensFlare
+from engine.biblioteca.astronomia.SolarGlow import SolarGlow
 from engine.biblioteca.astronomia.StarField import (
     StarField,
     animar_entrada_starfield,
 )
+from engine.biblioteca.astronomia.sol import criar_sol
 
-from engine.biblioteca.astronomia.sol import (
-    criar_sol,
-)
 
+# ==========================================================
+# COROA SOLAR
+# ==========================================================
 
 def criar_coroa_eclipse(
     *,
     raio: float,
 ) -> VGroup:
     """
-    Coroa solar fina, irregular e assimétrica.
+    Coroa solar fina e irregular.
     """
 
     coroa = VGroup()
 
     quantidade = 96
 
-    for indice in range(
-        quantidade
-    ):
+    for indice in range(quantidade):
 
         angulo = (
             TAU
@@ -62,8 +53,6 @@ def criar_coroa_eclipse(
             / quantidade
         )
 
-        # Mistura várias frequências para evitar
-        # uma coroa perfeitamente circular.
         onda_1 = math.sin(
             indice * 1.73
         )
@@ -80,10 +69,7 @@ def criar_coroa_eclipse(
 
         variacao = max(
             0.05,
-            min(
-                1.0,
-                variacao,
-            ),
+            min(1.0, variacao),
         )
 
         raio_interno = (
@@ -93,14 +79,14 @@ def criar_coroa_eclipse(
         raio_externo = (
             raio
             * (
-                1.09
+                1.08
                 + 0.18 * variacao
             )
         )
 
         opacidade = (
             0.10
-            + 0.23 * variacao
+            + 0.24 * variacao
         )
 
         linha = Line(
@@ -124,9 +110,7 @@ def criar_coroa_eclipse(
             about_point=ORIGIN,
         )
 
-        coroa.add(
-            linha
-        )
+        coroa.add(linha)
 
     coroa.set_z_index(
         47,
@@ -136,22 +120,28 @@ def criar_coroa_eclipse(
     return coroa
 
 
-def executar_cena_01(
-    cena,
-) -> None:
+# ==========================================================
+# CENA 01
+# ==========================================================
+
+def executar_cena_01(cena) -> None:
     """
-    Cena 01 — Hook cinematográfico do eclipse.
+    PARTE 1 — O MISTÉRIO
+
+    Não explica ainda o eclipse.
+    Cria perguntas que serão respondidas
+    nas cenas seguintes do Long.
     """
 
     # ======================================================
-    # ESPAÇO
+    # 1 — ESPAÇO
     # ======================================================
 
     starfield = StarField(
         seed=101,
-        quantidade_distantes=170,
-        quantidade_medias=90,
-        quantidade_proximas=40,
+        quantidade_distantes=180,
+        quantidade_medias=95,
+        quantidade_proximas=42,
         camada_azul=True,
     )
 
@@ -159,16 +149,13 @@ def executar_cena_01(
         starfield.fundo
     )
 
-    if (
-        starfield.camada_azul
-        is not None
-    ):
+    if starfield.camada_azul is not None:
         cena.add(
             starfield.camada_azul
         )
 
     # ======================================================
-    # SOL
+    # 2 — SOL
     # ======================================================
 
     raio_sol_inicial = 0.50
@@ -182,6 +169,7 @@ def executar_cena_01(
         intensidade=1.0,
     )
 
+    # Glow deliberadamente discreto.
     glow = SolarGlow(
         centro=ORIGIN,
         raio_base=raio_sol_inicial,
@@ -194,7 +182,7 @@ def executar_cena_01(
         centro=ORIGIN,
         raio_base=raio_sol_inicial,
         cor=YELLOW,
-        intensidade=0.30,
+        intensidade=0.24,
         qualidade="cinema",
     )
 
@@ -220,13 +208,13 @@ def executar_cena_01(
     )
 
     # ======================================================
-    # PRIMEIRO PLANO
+    # 3 — PRIMEIRO GANCHO
     # ======================================================
 
     cena.narrar(
         (
-            "No vazio do espaço, "
-            "uma luz começa a crescer."
+            "Há um fenómeno na Terra "
+            "que parece quase impossível."
         ),
         [
             animar_entrada_starfield(
@@ -239,24 +227,24 @@ def executar_cena_01(
             ),
         ],
         mostrar_legenda=True,
-        pausa_final=0.03,
+        pausa_final=0.05,
     )
 
     # ======================================================
-    # APROXIMAÇÃO
+    # 4 — APROXIMAÇÃO AO SOL
     # ======================================================
 
     camera = CameraRig(
-        starfield=starfield,
+        starfield=starfield
     )
 
     escala_final = 2.15
 
     cena.narrar(
         (
-            "É o Sol, uma estrela gigantesca "
-            "a cento e cinquenta milhões "
-            "de quilómetros de nós."
+            "Uma esfera muito mais pequena "
+            "consegue esconder por completo "
+            "uma estrela gigantesca."
         ),
         camera.dolly_in(
             grupo_sol,
@@ -265,31 +253,17 @@ def executar_cena_01(
             intensidade_parallax=1.05,
         ),
         mostrar_legenda=True,
-        pausa_final=0.04,
+        pausa_final=0.05,
     )
-
-    cena.play(
-        grupo_sol.animate.scale(
-            1.012
-        ),
-        run_time=0.48,
-    )
-
-    cena.play(
-        grupo_sol.animate.scale(
-            1 / 1.012
-        ),
-        run_time=0.48,
-    )
-
-    # ======================================================
-    # LUA
-    # ======================================================
 
     raio_sol_final = (
         raio_sol_inicial
         * escala_final
     )
+
+    # ======================================================
+    # 5 — LUA
+    # ======================================================
 
     raio_lua = (
         raio_sol_final
@@ -301,20 +275,19 @@ def executar_cena_01(
         fill_color=BLACK,
         fill_opacity=1.0,
         stroke_color="#333333",
-        stroke_opacity=0.035,
-        stroke_width=0.65,
+        stroke_opacity=0.025,
+        stroke_width=0.5,
     )
 
-    # Começa imediatamente fora do Sol.
-    posicao_inicial_lua = (
+    # Começa mesmo ao lado do Sol.
+    posicao_lua = (
         raio_sol_final
         + raio_lua
-        + 0.10
+        + 0.08
     )
 
     lua.move_to(
-        RIGHT
-        * posicao_inicial_lua
+        RIGHT * posicao_lua
     )
 
     lua.set_z_index(
@@ -322,19 +295,16 @@ def executar_cena_01(
         family=True,
     )
 
-    cena.add(
-        lua
-    )
+    cena.add(lua)
 
     # ======================================================
-    # PRIMEIRO CONTACTO
+    # 6 — PRIMEIRA PERGUNTA
     # ======================================================
 
     cena.narrar(
         (
-            "Então, uma sombra começa "
-            "lentamente a atravessar "
-            "o disco solar."
+            "E o mais estranho..."
+            " nem sequer é isso."
         ),
         lua.animate.move_to(
             RIGHT
@@ -342,18 +312,18 @@ def executar_cena_01(
             * 1.10
         ),
         mostrar_legenda=True,
-        pausa_final=0.03,
+        pausa_final=0.18,
     )
 
     # ======================================================
-    # ECLIPSE PARCIAL
+    # 7 — ECLIPSE PARCIAL
     # ======================================================
 
     cena.narrar(
         (
-            "A luz diminui. "
-            "O céu muda. "
-            "E o dia começa a desaparecer."
+            "Por alguns minutos, "
+            "o dia começa literalmente "
+            "a desaparecer."
         ),
         [
             lua.animate.move_to(
@@ -363,198 +333,341 @@ def executar_cena_01(
             ),
 
             glow.animate.set_opacity(
-                0
+                0.35
             ),
 
             flare.animate.set_opacity(
-                0.10
-            ),
-        ],
-        mostrar_legenda=True,
-        pausa_final=0.04,
-    )
-
-    # ======================================================
-    # COROA DO ECLIPSE
-    # ======================================================
-
-    coroa_total = criar_coroa_eclipse(
-        raio=raio_sol_final,
-    )
-
-    coroa_total.set_opacity(
-        0
-    )
-
-    cena.add(
-        coroa_total
-    )
-
-    # ======================================================
-    # TOTALIDADE
-    # ======================================================
-
-    cena.narrar(
-        (
-            "Até que, por alguns instantes, "
-            "a Lua cobre completamente o Sol."
-        ),
-        [
-            lua.animate.move_to(
-                ORIGIN
-            ),
-
-            # O glow normal praticamente desaparece.
-            glow.animate.set_opacity(
-                0.04
-            ),
-
-            # Flare desaparece.
-            flare.animate.set_opacity(
-                0.0
-            ),
-
-            # Agora quem ilumina é a coroa.
-            coroa_total.animate.set_opacity(
-                1.0
+                0.08
             ),
         ],
         mostrar_legenda=True,
         pausa_final=0.08,
     )
 
-    cena.wait(
-        0.40
-    )
-
     # ======================================================
-    # COMPOSIÇÃO FINAL
+    # 8 — PREPARAR COROA
     # ======================================================
 
-    conjunto_eclipse = VGroup(
-        grupo_sol,
-        coroa_total,
-        lua,
+    coroa = criar_coroa_eclipse(
+        raio=raio_sol_final
     )
 
-    # O eclipse sobe para libertar espaço
-    # para a pergunta.
-    cena.play(
-        conjunto_eclipse.animate.shift(
-            UP * 0.68
+    coroa.set_opacity(0)
+
+    cena.add(coroa)
+
+    # ======================================================
+    # 9 — TOTALIDADE
+    # ======================================================
+
+    cena.narrar(
+        (
+            "E então acontece isto."
         ),
-        run_time=0.65,
+        [
+            lua.animate.move_to(
+                ORIGIN
+            ),
+
+            # Glow normal desaparece.
+            glow.animate.set_opacity(
+                0.0
+            ),
+
+            flare.animate.set_opacity(
+                0.0
+            ),
+
+            # Só permanece a coroa.
+            coroa.animate.set_opacity(
+                1.0
+            ),
+        ],
+        mostrar_legenda=True,
+        pausa_final=0.20,
     )
 
+    # Momento para observar.
+    cena.wait(0.70)
+
     # ======================================================
-    # TÍTULO
+    # 10 — SEGUNDO GANCHO
     # ======================================================
 
-    etiqueta = Text(
-        "ECLIPSE TOTAL",
+    texto_coincidencia = Text(
+        "UMA COINCIDÊNCIA EXTRAORDINÁRIA",
         font_size=31,
         color=YELLOW,
         weight="BOLD",
     )
 
-    etiqueta.move_to(
-        [0, 2.78, 0]
+    texto_coincidencia.to_edge(
+        UP,
+        buff=0.55,
     )
 
-    etiqueta.set_z_index(
+    texto_coincidencia.set_z_index(
         200
     )
 
+    cena.narrar(
+        (
+            "Isto só é possível por causa "
+            "de uma coincidência extraordinária."
+        ),
+        FadeIn(
+            texto_coincidencia
+        ),
+        mostrar_legenda=True,
+        pausa_final=0.15,
+    )
+
     cena.play(
-        FadeIn(etiqueta),
+        FadeOut(
+            texto_coincidencia
+        ),
         run_time=0.35,
     )
 
     # ======================================================
-    # PERGUNTA
+    # 11 — TERCEIRO GANCHO
     # ======================================================
 
-    linha_1 = Text(
-        "COMO É POSSÍVEL",
-        font_size=31,
+    texto_desaparecer = Text(
+        "MAS NÃO VAI DURAR PARA SEMPRE",
+        font_size=32,
         color=WHITE,
         weight="BOLD",
     )
 
-    linha_2 = Text(
-        "UMA LUA TÃO PEQUENA",
-        font_size=38,
+    texto_desaparecer.to_edge(
+        UP,
+        buff=0.55,
+    )
+
+    texto_desaparecer.set_z_index(
+        200
+    )
+
+    cena.narrar(
+        (
+            "E há outro problema: "
+            "esta coincidência não vai durar para sempre."
+        ),
+        FadeIn(
+            texto_desaparecer
+        ),
+        mostrar_legenda=True,
+        pausa_final=0.15,
+    )
+
+    # ======================================================
+    # 12 — LUA COMEÇA A AFASTAR-SE
+    # ======================================================
+
+    cena.play(
+        FadeOut(
+            texto_desaparecer
+        ),
+        run_time=0.30,
+    )
+
+    cena.narrar(
+        (
+            "A Lua afasta-se da Terra "
+            "um pouco mais todos os anos."
+        ),
+        [
+            lua.animate.scale(
+                0.94
+            ),
+
+            coroa.animate.set_opacity(
+                0.82
+            ),
+        ],
+        mostrar_legenda=True,
+        pausa_final=0.10,
+    )
+
+    # ======================================================
+    # 13 — CONSEQUÊNCIA
+    # ======================================================
+
+    cena.narrar(
+        (
+            "No futuro, ela já não será "
+            "grande o suficiente no nosso céu "
+            "para esconder totalmente o Sol."
+        ),
+        lua.animate.scale(
+            0.93
+        ),
+        mostrar_legenda=True,
+        pausa_final=0.15,
+    )
+
+    # Agora vemos uma pequena borda do Sol.
+    cena.wait(0.45)
+
+    # ======================================================
+    # 14 — NOVAS PERGUNTAS
+    # ======================================================
+
+    conjunto_eclipse = VGroup(
+        grupo_sol,
+        coroa,
+        lua,
+    )
+
+    cena.play(
+        conjunto_eclipse.animate.shift(
+            UP * 0.72
+        ),
+        run_time=0.60,
+    )
+
+    pergunta_1 = Text(
+        "PORQUÊ AGORA?",
+        font_size=35,
         color=YELLOW,
         weight="BOLD",
     )
 
-    linha_3 = Text(
-        "ESCONDER UM SOL GIGANTESCO?",
+    pergunta_2 = Text(
+        "PORQUÊ SÓ EM ALGUNS LUGARES?",
         font_size=31,
         color=WHITE,
         weight="BOLD",
     )
 
-    pergunta = VGroup(
-        linha_1,
-        linha_2,
-        linha_3,
+    pergunta_3 = Text(
+        "E PORQUE NÃO ACONTECE TODOS OS MESES?",
+        font_size=29,
+        color=WHITE,
+        weight="BOLD",
     )
 
-    pergunta.arrange(
-        direction=[0, -1, 0],
-        buff=0.12,
+    perguntas = VGroup(
+        pergunta_1,
+        pergunta_2,
+        pergunta_3,
+    ).arrange(
+        DOWN,
+        buff=0.18,
     )
 
-    pergunta.move_to(
-        [0, -2.20, 0]
+    perguntas.move_to(
+        [0, -2.05, 0]
     )
 
-    pergunta.set_z_index(
+    perguntas.set_z_index(
         220,
         family=True,
     )
 
     cena.narrar(
         (
-            "Mas como é possível "
-            "uma Lua tão pequena "
-            "esconder um Sol gigantesco?"
+            "Então porque conseguimos ver "
+            "eclipses totais agora?"
         ),
-        [
-            FadeIn(
-                linha_1,
-                run_time=0.25,
-            ),
-            FadeIn(
-                linha_2,
-                run_time=0.35,
-            ),
-            FadeIn(
-                linha_3,
-                run_time=0.25,
-            ),
-        ],
+        FadeIn(
+            pergunta_1
+        ),
         mostrar_legenda=False,
-        pausa_final=0.12,
+        pausa_final=0.08,
     )
 
-    cena.wait(
-        0.65
+    cena.narrar(
+        (
+            "Porque só algumas regiões "
+            "da Terra conseguem vê-los?"
+        ),
+        FadeIn(
+            pergunta_2
+        ),
+        mostrar_legenda=False,
+        pausa_final=0.08,
+    )
+
+    cena.narrar(
+        (
+            "E porque não acontece "
+            "um eclipse todos os meses?"
+        ),
+        FadeIn(
+            pergunta_3
+        ),
+        mostrar_legenda=False,
+        pausa_final=0.18,
     )
 
     # ======================================================
-    # SAÍDA
+    # 15 — TÍTULO / TRANSIÇÃO PARA PARTE 2
+    # ======================================================
+
+    cena.play(
+        FadeOut(
+            perguntas
+        ),
+        run_time=0.40,
+    )
+
+    titulo = Text(
+        "O SEGREDO DOS ECLIPSES",
+        font_size=42,
+        color=YELLOW,
+        weight="BOLD",
+    )
+
+    subtitulo = Text(
+        "começa com dois números",
+        font_size=27,
+        color=WHITE,
+    )
+
+    titulo_final = VGroup(
+        titulo,
+        subtitulo,
+    ).arrange(
+        DOWN,
+        buff=0.22,
+    )
+
+    titulo_final.move_to(
+        [0, -1.95, 0]
+    )
+
+    titulo_final.set_z_index(
+        250,
+        family=True,
+    )
+
+    cena.narrar(
+        (
+            "A resposta começa "
+            "com dois números surpreendentes."
+        ),
+        FadeIn(
+            titulo_final
+        ),
+        mostrar_legenda=False,
+        pausa_final=0.20,
+    )
+
+    cena.wait(0.75)
+
+    # ======================================================
+    # 16 — SAÍDA PARA CENA 2
     # ======================================================
 
     cena.play(
         FadeOut(
             VGroup(
-                pergunta,
-                etiqueta,
+                titulo_final,
                 conjunto_eclipse,
                 starfield,
             )
         ),
-        run_time=0.70,
+        run_time=0.75,
     )
