@@ -14,38 +14,38 @@ from manim import (
 )
 
 from engine.biblioteca.astronomia.CameraRig import CameraRig
+
 from engine.biblioteca.astronomia.LensFlare import (
     LensFlare,
-    animar_entrada_flare,
 )
+
 from engine.biblioteca.astronomia.Parallax import (
     animar_aproximacao_espacial,
 )
+
 from engine.biblioteca.astronomia.SolarGlow import (
     SolarGlow,
-    animar_pulsacao_glow,
 )
+
 from engine.biblioteca.astronomia.StarField import (
     StarField,
     animar_entrada_starfield,
 )
+
 from engine.biblioteca.astronomia.sol import criar_sol
 
 
 def executar_cena_01(cena) -> None:
     """
-    Ato 1 — O Mistério.
+    Cena 01 — Introdução cinematográfica do eclipse.
 
-    Objetivo:
-    - prender imediatamente;
-    - dar profundidade;
-    - mostrar o Sol como presença viva;
-    - criar trânsito real da Lua;
-    - terminar numa pergunta forte.
+    Ordem:
+    estrelas → movimento → Sol + glow + flare
+    → aproximação → Lua → eclipse → pergunta.
     """
 
     # ======================================================
-    # 1. CAMPO ESTELAR
+    # 1. ESPAÇO — VISÍVEL IMEDIATAMENTE
     # ======================================================
 
     starfield = StarField(
@@ -56,42 +56,27 @@ def executar_cena_01(cena) -> None:
         camada_azul=True,
     )
 
+    # Apenas o fundo entra primeiro.
     cena.add(starfield.fundo)
 
     if starfield.camada_azul is not None:
         cena.add(starfield.camada_azul)
 
+    # Estrelas surgem rapidamente.
     cena.play(
         animar_entrada_starfield(
             starfield,
-            duracao=1.8,
-        )
-    )
-
-    cena.add(
-        starfield.distantes,
-        starfield.medias,
-        starfield.proximas,
-    )
-
-    # ======================================================
-    # 2. PARALLAX — COMEÇA LOGO A DAR PROFUNDIDADE
-    # ======================================================
-
-    cena.play(
-        animar_aproximacao_espacial(
-            starfield,
-            intensidade=0.85,
-            duracao=1.8,
+            duracao=0.9,
         )
     )
 
     # ======================================================
-    # 3. SOL DISTANTE
+    # 2. SOL + GLOW + LENS FLARE
     # ======================================================
 
+    # O Sol aparece cedo.
     sol = criar_sol(
-        raio=0.42,
+        raio=0.48,
         posicao=ORIGIN,
         qualidade="cinema",
         mostrar_halo=False,
@@ -99,50 +84,37 @@ def executar_cena_01(cena) -> None:
         intensidade=1.0,
     )
 
+    # Glow EXATAMENTE centrado no Sol.
     glow = SolarGlow(
         centro=ORIGIN,
-        raio_base=0.42,
-        cor=YELLOW,
-        intensidade=1.0,
-        qualidade="cinema",
-    )
-
-    flare = LensFlare(
-        centro=ORIGIN,
-        raio_base=0.42,
+        raio_base=0.48,
         cor=YELLOW,
         intensidade=0.85,
         qualidade="cinema",
     )
 
-    cena.add(
-        glow,
-        sol,
-        flare,
+    # Lens flare também nasce no mesmo centro.
+    flare = LensFlare(
+        centro=ORIGIN,
+        raio_base=0.48,
+        cor=YELLOW,
+        intensidade=0.28,
+        qualidade="cinema",
     )
 
-    glow.set_opacity(0)
-    sol.set_opacity(0)
-    flare.set_opacity(0)
+    # ------------------------------------------------------
+    # ORDEM DAS CAMADAS
+    #
+    # estrelas   → fundo
+    # glow       → atrás do Sol
+    # Sol        → disco principal
+    # flare      → por cima, subtil
+    # Lua        → por cima de tudo durante o eclipse
+    # ------------------------------------------------------
 
-    cena.play(
-        FadeIn(sol),
-        FadeIn(glow),
-        animar_entrada_flare(
-            flare,
-            escala_inicial=0.30,
-            duracao=1.4,
-        ),
-        run_time=1.4,
-    )
-
-    # ======================================================
-    # 4. CÂMARA APROXIMA DO SOL
-    # ======================================================
-
-    camera = CameraRig(
-        starfield=starfield,
-    )
+    glow.set_z_index(20, family=True)
+    sol.set_z_index(30, family=True)
+    flare.set_z_index(40, family=True)
 
     grupo_sol = VGroup(
         glow,
@@ -150,94 +122,125 @@ def executar_cena_01(cena) -> None:
         flare,
     )
 
+    # ======================================================
+    # 3. NARRAÇÃO COMEÇA QUASE IMEDIATAMENTE
+    # ======================================================
+
     cena.narrar(
-        "No vazio do espaço, uma luz cresce diante de nós.",
-        camera.dolly_in(
+        "No vazio do espaço, uma luz começa a crescer.",
+        FadeIn(
             grupo_sol,
-            escala=2.25,
-            duracao=3.2,
-            intensidade_parallax=1.15,
+            run_time=1.4,
         ),
         mostrar_legenda=True,
     )
 
     # ======================================================
-    # 5. SOL VIVO
+    # 4. APROXIMAÇÃO CINEMATOGRÁFICA
     # ======================================================
 
+    camera = CameraRig(
+        starfield=starfield,
+    )
+
+    cena.narrar(
+        "É o Sol, uma estrela gigantesca a cento e cinquenta milhões de quilómetros de nós.",
+        camera.dolly_in(
+            grupo_sol,
+            escala=2.15,
+            duracao=3.2,
+            intensidade_parallax=1.10,
+        ),
+        mostrar_legenda=True,
+    )
+
+    # Pequena respiração conjunta.
     cena.play(
-        animar_pulsacao_glow(
-            glow,
-            intensidade=1.035,
-            duracao=0.9,
+        grupo_sol.animate.scale(1.025),
+        run_time=0.65,
+    )
+
+    cena.play(
+        grupo_sol.animate.scale(1 / 1.025),
+        run_time=0.65,
+    )
+
+    # Continua a existir movimento no espaço.
+    cena.play(
+        animar_aproximacao_espacial(
+            starfield,
+            intensidade=0.35,
+            duracao=1.0,
         )
     )
 
-    cena.play(
-        glow.animate.scale(1 / 1.035),
-        run_time=0.9,
-    )
-
     # ======================================================
-    # 6. LUA ENTRA
+    # 5. LUA ENTRA — SÓ DEPOIS DO SOL ESTAR VISÍVEL
     # ======================================================
 
-    raio_lua = 0.90
-
+    # Depois do zoom o Sol está muito maior.
+    # A Lua precisa de acompanhar visualmente essa escala.
     lua = Circle(
-        radius=raio_lua,
+        radius=0.98,
         fill_color=BLACK,
         fill_opacity=1.0,
-        stroke_color="#707070",
-        stroke_opacity=0.75,
-        stroke_width=2.0,
+        stroke_color="#696969",
+        stroke_opacity=0.50,
+        stroke_width=1.5,
     )
 
-    lua.move_to(RIGHT * 6.0)
-    lua.set_z_index(100)
+    lua.move_to(RIGHT * 7.0)
+    lua.set_z_index(60)
 
     cena.add(lua)
 
     cena.narrar(
-        "Então, sem aviso, a Lua começa a atravessar o disco solar.",
-        lua.animate.move_to(RIGHT * 1.15),
+        "Então, uma sombra começa lentamente a atravessar o disco solar.",
+        lua.animate.move_to(RIGHT * 1.35),
         mostrar_legenda=True,
     )
 
     # ======================================================
-    # 7. ECLIPSE PARCIAL
+    # 6. ECLIPSE PARCIAL
     # ======================================================
 
     cena.play(
-        lua.animate.move_to(RIGHT * 0.48),
-        starfield.distantes.animate.set_opacity(0.38),
-        starfield.medias.animate.set_opacity(0.48),
-        starfield.proximas.animate.set_opacity(0.58),
-        glow.animate.set_opacity(0.70),
-        flare.animate.set_opacity(0.55),
-        run_time=2.5,
+        lua.animate.move_to(RIGHT * 0.55),
+
+        # O Sol perde intensidade mas NÃO desaparece.
+        glow.animate.set_opacity(0.72),
+
+        # O flare reduz à medida que a Lua cobre o Sol.
+        flare.animate.set_opacity(0.18),
+
+        run_time=2.3,
     )
 
     cena.narrar(
-        "A luz diminui. O céu muda. E por alguns instantes, o dia parece desaparecer.",
+        "A luz diminui. O céu muda. E, por alguns instantes, o dia começa a desaparecer.",
         mostrar_legenda=True,
     )
 
     # ======================================================
-    # 8. ECLIPSE TOTAL
+    # 7. ECLIPSE TOTAL
     # ======================================================
 
     cena.play(
         lua.animate.move_to(ORIGIN),
+
+        # No total, a coroa/glow permanece visível.
         glow.animate.set_opacity(1.0),
-        flare.animate.set_opacity(0.32),
-        run_time=2.4,
+
+        # Lens flare quase desaparece.
+        flare.animate.set_opacity(0.06),
+
+        run_time=2.2,
     )
 
-    cena.wait(0.6)
+    cena.wait(0.35)
 
     # ======================================================
-    # 9. ETIQUETA
+    # 8. ECLIPSE TOTAL — IDENTIFICAÇÃO
     # ======================================================
 
     etiqueta = Text(
@@ -247,37 +250,35 @@ def executar_cena_01(cena) -> None:
         weight="BOLD",
     )
 
-    etiqueta.move_to([0, 2.45, 0])
-    etiqueta.set_z_index(300)
+    etiqueta.move_to([0, 2.50, 0])
+    etiqueta.set_z_index(200)
 
     cena.play(
         FadeIn(etiqueta),
-        run_time=0.5,
+        run_time=0.45,
     )
 
-    cena.wait(0.5)
-
     # ======================================================
-    # 10. PERGUNTA
+    # 9. PERGUNTA PRINCIPAL
     # ======================================================
 
     linha_1 = Text(
         "COMO É POSSÍVEL",
-        font_size=38,
+        font_size=36,
         color=WHITE,
         weight="BOLD",
     )
 
     linha_2 = Text(
         "UMA LUA TÃO PEQUENA",
-        font_size=45,
+        font_size=43,
         color=YELLOW,
         weight="BOLD",
     )
 
     linha_3 = Text(
         "ESCONDER UM SOL GIGANTESCO?",
-        font_size=40,
+        font_size=37,
         color=WHITE,
         weight="BOLD",
     )
@@ -288,14 +289,16 @@ def executar_cena_01(cena) -> None:
         linha_3,
     ).arrange(
         direction=[0, -1, 0],
-        buff=0.18,
+        buff=0.16,
     )
 
-    pergunta.move_to([0, -2.05, 0])
-    pergunta.set_z_index(350)
+    # Mais alta que anteriormente para não colidir
+    # com as legendas/área inferior.
+    pergunta.move_to([0, -1.55, 0])
+    pergunta.set_z_index(220)
 
     cena.narrar(
-        "Como é possível uma Lua tão pequena esconder um Sol gigantesco?",
+        "Mas como é possível uma Lua tão pequena esconder um Sol gigantesco?",
         [
             FadeIn(linha_1),
             FadeIn(linha_2),
@@ -304,10 +307,10 @@ def executar_cena_01(cena) -> None:
         mostrar_legenda=False,
     )
 
-    cena.wait(1.0)
+    cena.wait(0.8)
 
     # ======================================================
-    # 11. SAÍDA
+    # 10. SAÍDA
     # ======================================================
 
     cena.play(
@@ -316,11 +319,9 @@ def executar_cena_01(cena) -> None:
                 pergunta,
                 etiqueta,
                 lua,
-                glow,
-                sol,
-                flare,
+                grupo_sol,
                 starfield,
             )
         ),
-        run_time=0.9,
+        run_time=0.8,
     )
