@@ -186,7 +186,7 @@ def executar_cena_01(
         centro=ORIGIN,
         raio_base=raio_sol_inicial,
         cor=YELLOW,
-        intensidade=0.80,
+        intensidade=0.30,
         qualidade="cinema",
     )
 
@@ -363,7 +363,7 @@ def executar_cena_01(
             ),
 
             glow.animate.set_opacity(
-                0.45
+                0
             ),
 
             flare.animate.set_opacity(

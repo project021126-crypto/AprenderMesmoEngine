@@ -11,10 +11,13 @@ from manim import (
 
 class SolarGlow(VGroup):
     """
-    Halo solar cinematográfico multicamada.
+    Glow solar discreto e cinematográfico.
 
-    Construído com muitas camadas extremamente suaves
-    para evitar círculos/anéis claramente visíveis.
+    Objetivo:
+    - iluminar subtilmente o Sol;
+    - não aumentar visualmente demasiado o seu tamanho;
+    - evitar anéis visíveis;
+    - desaparecer quase por completo no eclipse total.
     """
 
     def __init__(
@@ -26,7 +29,6 @@ class SolarGlow(VGroup):
         intensidade: float = 1.0,
         qualidade: str = "cinema",
     ) -> None:
-
         super().__init__()
 
         if raio_base <= 0:
@@ -49,9 +51,9 @@ class SolarGlow(VGroup):
             )
 
         quantidade_camadas = {
-            "draft": 8,
-            "youtube": 14,
-            "cinema": 22,
+            "draft": 5,
+            "youtube": 8,
+            "cinema": 12,
         }[qualidade]
 
         self.centro = centro
@@ -61,10 +63,6 @@ class SolarGlow(VGroup):
         self.qualidade = qualidade
 
         self.camadas = VGroup()
-
-        # ==================================================
-        # GLOW DIFUSO
-        # ==================================================
 
         for indice in range(
             quantidade_camadas
@@ -78,17 +76,17 @@ class SolarGlow(VGroup):
                 )
             )
 
-            # Camadas cada vez maiores.
+            # Antes chegava perto de 1.88x o raio.
+            # Agora o glow termina apenas ~30% fora do Sol.
             multiplicador = (
-                1.06
-                + progresso * 0.82
+                1.025
+                + progresso * 0.30
             )
 
-            # Muito transparente.
-            # Quanto mais longe do Sol, menor a intensidade.
+            # Muito menos luminosidade.
             opacidade = (
-                0.040
-                * (1.0 - progresso) ** 2
+                0.018
+                * (1.0 - progresso) ** 2.2
                 * intensidade
             )
 
@@ -105,26 +103,23 @@ class SolarGlow(VGroup):
             )
 
             camada.set_z_index(
-                -50 + indice
+                -40 + indice
             )
 
             self.camadas.add(
                 camada
             )
 
-        # ==================================================
-        # BORDA LUMINOSA MUITO FINA
-        # ==================================================
-
+        # Borda mínima junto ao disco.
         self.borda_luminosa = Circle(
-            radius=raio_base * 1.025,
+            radius=raio_base * 1.012,
             fill_opacity=0,
             stroke_color=WHITE,
             stroke_opacity=min(
-                0.24,
-                0.18 * intensidade,
+                0.10,
+                0.07 * intensidade,
             ),
-            stroke_width=1.15,
+            stroke_width=0.7,
         ).move_to(
             centro
         )
@@ -142,9 +137,12 @@ class SolarGlow(VGroup):
 def animar_pulsacao_glow(
     glow: SolarGlow,
     *,
-    intensidade: float = 1.012,
+    intensidade: float = 1.006,
     duracao: float = 1.2,
 ):
+    """
+    Pulsação quase impercetível.
+    """
 
     if intensidade <= 1.0:
         raise ValueError(
@@ -166,9 +164,12 @@ def animar_pulsacao_glow(
 def animar_expansao_glow(
     glow: SolarGlow,
     *,
-    escala: float = 1.06,
+    escala: float = 1.025,
     duracao: float = 1.8,
 ):
+    """
+    Expansão muito subtil.
+    """
 
     if escala <= 1.0:
         raise ValueError(
