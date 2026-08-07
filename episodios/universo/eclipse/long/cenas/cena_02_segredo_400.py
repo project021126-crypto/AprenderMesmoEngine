@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from manim import (
+    BLACK,
     DOWN,
     LEFT,
     ORIGIN,
@@ -8,7 +9,6 @@ from manim import (
     UP,
     Arrow,
     Circle,
-    DecimalNumber,
     FadeIn,
     FadeOut,
     GrowArrow,
@@ -38,11 +38,11 @@ def executar_cena_02(cena) -> None:
     PARTE 2 — O SEGREDO DOS 400
 
     Revela:
-    - o Sol é aproximadamente 400x maior que a Lua;
-    - o Sol está aproximadamente 400x mais distante;
-    - por isso os dois podem parecer quase do mesmo tamanho no céu.
+    - Sol ≈ 400x maior que a Lua;
+    - Sol ≈ 400x mais distante;
+    - por isso ambos têm tamanho aparente semelhante.
 
-    Termina abrindo a próxima pergunta:
+    Termina com:
     porque não acontece um eclipse todos os meses?
     """
 
@@ -70,24 +70,24 @@ def executar_cena_02(cena) -> None:
     cena.play(
         animar_entrada_starfield(
             starfield,
-            duracao=0.75,
+            duracao=0.70,
         )
     )
 
     # ======================================================
-    # 2 — GANCHO: DOIS NÚMEROS
+    # 2 — OS DOIS NÚMEROS
     # ======================================================
 
     numero_1 = Text(
         "400×",
-        font_size=92,
+        font_size=84,
         color=YELLOW,
         weight="BOLD",
     )
 
     numero_2 = Text(
         "400×",
-        font_size=92,
+        font_size=84,
         color=WHITE,
         weight="BOLD",
     )
@@ -97,7 +97,7 @@ def executar_cena_02(cena) -> None:
         numero_2,
     ).arrange(
         RIGHT,
-        buff=2.2,
+        buff=2.8,
     )
 
     numeros.move_to(
@@ -107,31 +107,31 @@ def executar_cena_02(cena) -> None:
     cena.narrar(
         (
             "Lembras-te dos dois números? "
-            "Curiosamente... são quase iguais."
+            "Curiosamente, são quase iguais."
         ),
         [
             FadeIn(numero_1),
             FadeIn(numero_2),
         ],
         mostrar_legenda=True,
-        pausa_final=0.10,
+        pausa_final=0.08,
     )
 
     # ======================================================
-    # 3 — PRIMEIRO 400: TAMANHO
+    # 3 — 400× MAIOR
     # ======================================================
 
     cena.play(
-        numero_2.animate.set_opacity(0.18),
-        numero_1.animate.move_to(
-            [0, 2.35, 0]
-        ),
-        run_time=0.65,
+        FadeOut(numero_2),
+        numero_1.animate
+        .scale(0.78)
+        .move_to([0, 2.65, 0]),
+        run_time=0.60,
     )
 
     titulo_tamanho = Text(
-        "TAMANHO",
-        font_size=30,
+        "O PRIMEIRO 400",
+        font_size=25,
         color=WHITE,
         weight="BOLD",
     )
@@ -139,21 +139,21 @@ def executar_cena_02(cena) -> None:
     titulo_tamanho.next_to(
         numero_1,
         DOWN,
-        buff=0.16,
+        buff=0.12,
     )
 
     cena.play(
         FadeIn(titulo_tamanho),
-        run_time=0.30,
+        run_time=0.25,
     )
 
     # ======================================================
-    # 4 — SOL E LUA LADO A LADO
+    # 4 — SOL E LUA
     # ======================================================
 
     sol_grande = criar_sol(
-        raio=1.55,
-        posicao=LEFT * 3.2,
+        raio=1.45,
+        posicao=LEFT * 3.1,
         qualidade="cinema",
         mostrar_halo=False,
         mostrar_coroa=False,
@@ -161,8 +161,8 @@ def executar_cena_02(cena) -> None:
     )
 
     lua_pequena = criar_lua(
-        raio=0.26,
-        posicao=RIGHT * 3.25,
+        raio=0.24,
+        posicao=RIGHT * 3.15,
         qualidade="cinema",
         mostrar_halo=False,
         mostrar_crateras=True,
@@ -171,30 +171,30 @@ def executar_cena_02(cena) -> None:
 
     label_sol = Text(
         "SOL",
-        font_size=26,
+        font_size=24,
         color=YELLOW,
         weight="BOLD",
     ).next_to(
         sol_grande,
         DOWN,
-        buff=0.28,
+        buff=0.22,
     )
 
     label_lua = Text(
         "LUA",
-        font_size=26,
+        font_size=24,
         color=WHITE,
         weight="BOLD",
     ).next_to(
         lua_pequena,
         DOWN,
-        buff=0.28,
+        buff=0.22,
     )
 
     cena.narrar(
         (
-            "O Sol tem cerca de quatrocentas vezes "
-            "o diâmetro da Lua."
+            "O Sol tem aproximadamente "
+            "quatrocentas vezes o diâmetro da Lua."
         ),
         [
             FadeIn(sol_grande),
@@ -203,114 +203,120 @@ def executar_cena_02(cena) -> None:
             FadeIn(label_lua),
         ],
         mostrar_legenda=True,
-        pausa_final=0.08,
+        pausa_final=0.05,
     )
 
     # ======================================================
-    # 5 — COMPARAÇÃO VISUAL
+    # 5 — MEDIDA VISUAL MAIS LIMPA
     # ======================================================
 
     linha_sol = Line(
         sol_grande.get_left(),
         sol_grande.get_right(),
         color=YELLOW,
-        stroke_width=4,
+        stroke_width=3,
     )
 
     linha_lua = Line(
         lua_pequena.get_left(),
         lua_pequena.get_right(),
         color=WHITE,
-        stroke_width=4,
+        stroke_width=3,
     )
 
-    cena.play(
-        FadeIn(linha_sol),
-        FadeIn(linha_lua),
-        run_time=0.45,
+    linha_sol.next_to(
+        sol_grande,
+        UP,
+        buff=0.18,
+    )
+
+    linha_lua.next_to(
+        lua_pequena,
+        UP,
+        buff=0.18,
     )
 
     texto_400_tamanho = Text(
         "≈ 400× MAIOR",
-        font_size=36,
+        font_size=31,
         color=YELLOW,
         weight="BOLD",
     )
 
     texto_400_tamanho.move_to(
-        [0, -2.30, 0]
+        [0, -2.20, 0]
     )
 
     cena.play(
+        FadeIn(linha_sol),
+        FadeIn(linha_lua),
         FadeIn(texto_400_tamanho),
         run_time=0.40,
     )
 
-    cena.wait(0.45)
+    cena.wait(0.40)
 
     # ======================================================
-    # 6 — MAS HÁ UM PROBLEMA
+    # 6 — TRANSIÇÃO PARA DISTÂNCIA
     # ======================================================
 
     cena.narrar(
         (
-            "Só que existe um detalhe fundamental: "
-            "o Sol também está muito mais longe."
+            "Mas o tamanho é apenas metade da história."
         ),
         FadeOut(
             VGroup(
+                numero_1,
+                titulo_tamanho,
                 linha_sol,
                 linha_lua,
                 texto_400_tamanho,
-                titulo_tamanho,
-                numero_1,
-                numero_2,
                 label_sol,
                 label_lua,
             )
         ),
         mostrar_legenda=True,
-        pausa_final=0.08,
+        pausa_final=0.04,
     )
 
     # ======================================================
-    # 7 — DISTÂNCIA
+    # 7 — SEGUNDO 400: DISTÂNCIA
     # ======================================================
 
     sol_distancia = sol_grande.copy()
-
-    sol_distancia.scale(0.58)
+    sol_distancia.scale(0.52)
     sol_distancia.move_to(
-        LEFT * 5.2
+        LEFT * 5.05
     )
 
     lua_distancia = lua_pequena.copy()
-
-    lua_distancia.scale(1.35)
+    lua_distancia.scale(1.15)
     lua_distancia.move_to(
-        RIGHT * 0.6
+        RIGHT * 1.25
     )
 
-    observador = Circle(
-        radius=0.16,
-        fill_color=WHITE,
+    terra = Circle(
+        radius=0.18,
+        fill_color="#4A7BD0",
         fill_opacity=1.0,
-        stroke_opacity=0,
+        stroke_color=WHITE,
+        stroke_opacity=0.35,
+        stroke_width=1.0,
     )
 
-    observador.move_to(
-        RIGHT * 5.3
+    terra.move_to(
+        RIGHT * 5.25
     )
 
-    label_observador = Text(
+    label_terra = Text(
         "TERRA",
-        font_size=24,
+        font_size=22,
         color=WHITE,
         weight="BOLD",
     ).next_to(
-        observador,
+        terra,
         DOWN,
-        buff=0.20,
+        buff=0.18,
     )
 
     cena.play(
@@ -318,60 +324,63 @@ def executar_cena_02(cena) -> None:
         FadeOut(lua_pequena),
         FadeIn(sol_distancia),
         FadeIn(lua_distancia),
-        FadeIn(observador),
-        FadeIn(label_observador),
-        run_time=0.70,
+        FadeIn(terra),
+        FadeIn(label_terra),
+        run_time=0.65,
     )
 
     # ======================================================
-    # 8 — LINHAS DE DISTÂNCIA
+    # 8 — DISTÂNCIA SOL/TERRA
     # ======================================================
 
     seta_sol = Arrow(
-        start=observador.get_left(),
+        start=terra.get_left(),
         end=sol_distancia.get_right(),
-        buff=0.10,
+        buff=0.12,
         color=YELLOW,
-        stroke_width=3,
+        stroke_width=2.5,
         max_tip_length_to_length_ratio=0.035,
-    )
-
-    seta_lua = Arrow(
-        start=observador.get_left(),
-        end=lua_distancia.get_right(),
-        buff=0.10,
-        color=WHITE,
-        stroke_width=3,
-        max_tip_length_to_length_ratio=0.07,
     )
 
     texto_distancia_sol = Text(
         "≈ 150 milhões km",
-        font_size=25,
+        font_size=23,
         color=YELLOW,
         weight="BOLD",
     )
 
     texto_distancia_sol.move_to(
-        [-2.0, 1.25, 0]
+        [-2.10, 1.20, 0]
+    )
+
+    # ======================================================
+    # 9 — DISTÂNCIA LUA/TERRA
+    # ======================================================
+
+    seta_lua = Arrow(
+        start=terra.get_left(),
+        end=lua_distancia.get_right(),
+        buff=0.10,
+        color=WHITE,
+        stroke_width=2.5,
+        max_tip_length_to_length_ratio=0.09,
     )
 
     texto_distancia_lua = Text(
         "≈ 384 mil km",
-        font_size=25,
+        font_size=23,
         color=WHITE,
         weight="BOLD",
     )
 
     texto_distancia_lua.move_to(
-        [2.8, -1.20, 0]
+        [3.05, -1.20, 0]
     )
 
     cena.narrar(
         (
-            "O Sol está aproximadamente "
-            "quatrocentas vezes mais distante da Terra "
-            "do que a Lua."
+            "O Sol também está aproximadamente "
+            "quatrocentas vezes mais distante da Terra."
         ),
         [
             GrowArrow(seta_sol),
@@ -380,46 +389,46 @@ def executar_cena_02(cena) -> None:
             FadeIn(texto_distancia_lua),
         ],
         mostrar_legenda=True,
-        pausa_final=0.10,
+        pausa_final=0.07,
     )
 
     # ======================================================
-    # 9 — SEGUNDO 400
+    # 10 — REVELAR O SEGUNDO 400
     # ======================================================
 
     segredo = Text(
         "≈ 400× MAIS DISTANTE",
-        font_size=42,
+        font_size=35,
         color=YELLOW,
         weight="BOLD",
     )
 
     segredo.to_edge(
         UP,
-        buff=0.55,
+        buff=0.50,
     )
 
     cena.play(
         FadeIn(segredo),
-        run_time=0.40,
+        run_time=0.35,
     )
 
-    cena.wait(0.50)
+    cena.wait(0.45)
 
     # ======================================================
-    # 10 — A COINCIDÊNCIA
+    # 11 — LIMPAR
     # ======================================================
 
     cena.narrar(
         (
-            "E é aqui que acontece a coincidência."
+            "E é aí que os dois números se encontram."
         ),
         FadeOut(
             VGroup(
                 sol_distancia,
                 lua_distancia,
-                observador,
-                label_observador,
+                terra,
+                label_terra,
                 seta_sol,
                 seta_lua,
                 texto_distancia_sol,
@@ -428,36 +437,55 @@ def executar_cena_02(cena) -> None:
             )
         ),
         mostrar_legenda=True,
-        pausa_final=0.08,
+        pausa_final=0.05,
     )
 
     # ======================================================
-    # 11 — APARENTEMENTE IGUAIS
+    # 12 — TAMANHO APARENTE
     # ======================================================
 
     sol_aparente = criar_sol(
-        raio=1.10,
-        posicao=LEFT * 2.25,
+        raio=1.08,
+        posicao=LEFT * 2.2,
         qualidade="cinema",
         mostrar_halo=False,
         mostrar_coroa=False,
         intensidade=1.0,
     )
 
-    lua_aparente = criar_lua(
-        raio=1.07,
-        posicao=RIGHT * 2.25,
-        qualidade="cinema",
-        mostrar_halo=False,
-        mostrar_crateras=True,
-        mostrar_label=False,
+    # Aqui NÃO usamos criar_lua().
+    # Queremos mostrar o disco escuro que realmente
+    # vemos durante um eclipse solar.
+    lua_aparente = Circle(
+        radius=1.045,
+        fill_color=BLACK,
+        fill_opacity=1.0,
+        stroke_color="#686868",
+        stroke_opacity=0.35,
+        stroke_width=1.1,
+    )
+
+    lua_aparente.move_to(
+        RIGHT * 2.2
     )
 
     igual = Text(
         "≈",
-        font_size=78,
+        font_size=68,
         color=WHITE,
         weight="BOLD",
+    )
+
+    label_aparente = Text(
+        "VISTOS DA TERRA",
+        font_size=25,
+        color=WHITE,
+        weight="BOLD",
+    )
+
+    label_aparente.to_edge(
+        UP,
+        buff=0.55,
     )
 
     cena.narrar(
@@ -466,16 +494,17 @@ def executar_cena_02(cena) -> None:
             "os dois ocupam quase o mesmo tamanho no céu."
         ),
         [
+            FadeIn(label_aparente),
             FadeIn(sol_aparente),
             FadeIn(lua_aparente),
             FadeIn(igual),
         ],
         mostrar_legenda=True,
-        pausa_final=0.10,
+        pausa_final=0.06,
     )
 
     # ======================================================
-    # 12 — SOBREPOSIÇÃO
+    # 13 — SOBREPOR
     # ======================================================
 
     cena.play(
@@ -486,37 +515,39 @@ def executar_cena_02(cena) -> None:
             ORIGIN
         ),
         FadeOut(igual),
-        run_time=2.0,
+        FadeOut(label_aparente),
+        run_time=1.8,
     )
 
+    # Agora fica muito mais parecido com eclipse.
     texto_perfeito = Text(
         "QUASE O MESMO TAMANHO APARENTE",
-        font_size=31,
+        font_size=29,
         color=YELLOW,
         weight="BOLD",
     )
 
     texto_perfeito.to_edge(
         UP,
-        buff=0.60,
+        buff=0.52,
     )
 
     cena.play(
         FadeIn(texto_perfeito),
-        run_time=0.45,
+        run_time=0.35,
     )
 
     cena.narrar(
         (
-            "Por isso, quando ficam perfeitamente alinhados, "
-            "a Lua consegue esconder o Sol."
+            "É por isso que, quando ficam alinhados, "
+            "a Lua consegue cobrir quase exatamente o disco solar."
         ),
         mostrar_legenda=True,
-        pausa_final=0.12,
+        pausa_final=0.08,
     )
 
     # ======================================================
-    # 13 — REVELAÇÃO 400 + 400
+    # 14 — A EQUAÇÃO VISUAL DOS 400
     # ======================================================
 
     cena.play(
@@ -527,26 +558,26 @@ def executar_cena_02(cena) -> None:
                 texto_perfeito,
             )
         ),
-        run_time=0.55,
+        run_time=0.45,
     )
 
     quatrocentos_1 = Text(
         "400× MAIOR",
-        font_size=48,
+        font_size=43,
         color=YELLOW,
         weight="BOLD",
     )
 
     mais = Text(
-        "+",
-        font_size=52,
+        "↕",
+        font_size=42,
         color=WHITE,
         weight="BOLD",
     )
 
     quatrocentos_2 = Text(
-        "400× MAIS LONGE",
-        font_size=48,
+        "400× MAIS DISTANTE",
+        font_size=43,
         color=YELLOW,
         weight="BOLD",
     )
@@ -557,7 +588,7 @@ def executar_cena_02(cena) -> None:
         quatrocentos_2,
     ).arrange(
         DOWN,
-        buff=0.30,
+        buff=0.24,
     )
 
     formula_visual.move_to(
@@ -567,7 +598,7 @@ def executar_cena_02(cena) -> None:
     cena.narrar(
         (
             "Quatrocentas vezes maior. "
-            "Quatrocentas vezes mais longe."
+            "Quatrocentas vezes mais distante."
         ),
         [
             FadeIn(quatrocentos_1),
@@ -575,80 +606,90 @@ def executar_cena_02(cena) -> None:
             FadeIn(quatrocentos_2),
         ],
         mostrar_legenda=False,
-        pausa_final=0.15,
+        pausa_final=0.12,
     )
 
     # ======================================================
-    # 14 — MAS NÃO TERMINÁMOS
+    # 15 — NOVO MISTÉRIO
     # ======================================================
 
     cena.play(
         FadeOut(
             formula_visual
         ),
-        run_time=0.45,
+        run_time=0.40,
     )
 
     nova_pergunta = Text(
-        "ENTÃO PORQUE NÃO HÁ UM ECLIPSE TODOS OS MESES?",
-        font_size=34,
+        "ENTÃO PORQUE NÃO HÁ",
+        font_size=35,
+        color=WHITE,
+        weight="BOLD",
+    )
+
+    nova_pergunta_2 = Text(
+        "UM ECLIPSE TODOS OS MESES?",
+        font_size=41,
         color=YELLOW,
         weight="BOLD",
     )
 
-    nova_pergunta.move_to(
+    pergunta = VGroup(
+        nova_pergunta,
+        nova_pergunta_2,
+    ).arrange(
+        DOWN,
+        buff=0.18,
+    )
+
+    pergunta.move_to(
         ORIGIN
     )
 
     cena.narrar(
         (
-            "Mas se o encaixe é tão perfeito... "
+            "Mas se o encaixe é tão perfeito, "
             "porque não temos um eclipse todos os meses?"
         ),
-        FadeIn(
-            nova_pergunta
-        ),
+        [
+            FadeIn(nova_pergunta),
+            FadeIn(nova_pergunta_2),
+        ],
         mostrar_legenda=False,
-        pausa_final=0.25,
-    )
-
-    cena.wait(
-        0.80
+        pausa_final=0.18,
     )
 
     # ======================================================
-    # 15 — TRANSIÇÃO
+    # 16 — GANCHO PARA CENA 3
     # ======================================================
 
     proximo = Text(
-        "O ALINHAMENTO NÃO É TÃO SIMPLES",
-        font_size=29,
+        "PORQUE A LUA NÃO VIAJA NUMA LINHA PERFEITA.",
+        font_size=27,
         color=WHITE,
         weight="BOLD",
     )
 
     proximo.next_to(
-        nova_pergunta,
+        pergunta,
         DOWN,
         buff=0.55,
     )
 
     cena.play(
         FadeIn(proximo),
-        run_time=0.40,
+        run_time=0.35,
     )
 
-    cena.wait(
-        0.75
-    )
+    cena.wait(0.70)
 
     cena.play(
         FadeOut(
             VGroup(
-                nova_pergunta,
+                pergunta,
                 proximo,
                 starfield,
             )
         ),
-        run_time=0.70,
+        run_time=0.65,
     )
