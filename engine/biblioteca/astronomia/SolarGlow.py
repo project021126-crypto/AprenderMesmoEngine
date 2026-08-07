@@ -11,16 +11,10 @@ from manim import (
 
 class SolarGlow(VGroup):
     """
-    Halo solar cinematográfico suave.
+    Halo solar cinematográfico multicamada.
 
-    Em vez de anéis desenhados com contorno grosso,
-    utiliza discos transparentes sobrepostos.
-
-    Resultado:
-    - brilho difuso;
-    - transição gradual;
-    - sem efeito de "donut";
-    - continua visível como halo durante o eclipse.
+    Construído com muitas camadas extremamente suaves
+    para evitar círculos/anéis claramente visíveis.
     """
 
     def __init__(
@@ -32,6 +26,7 @@ class SolarGlow(VGroup):
         intensidade: float = 1.0,
         qualidade: str = "cinema",
     ) -> None:
+
         super().__init__()
 
         if raio_base <= 0:
@@ -50,33 +45,14 @@ class SolarGlow(VGroup):
             "cinema",
         }:
             raise ValueError(
-                "qualidade deve ser "
-                "'draft', 'youtube' ou 'cinema'."
+                "qualidade inválida."
             )
 
-        configuracoes = {
-            "draft": [
-                (1.45, 0.045),
-                (1.25, 0.070),
-                (1.12, 0.110),
-            ],
-            "youtube": [
-                (1.70, 0.025),
-                (1.48, 0.040),
-                (1.30, 0.060),
-                (1.18, 0.090),
-                (1.10, 0.130),
-            ],
-            "cinema": [
-                (1.95, 0.018),
-                (1.72, 0.026),
-                (1.52, 0.038),
-                (1.36, 0.052),
-                (1.24, 0.070),
-                (1.15, 0.095),
-                (1.09, 0.135),
-            ],
-        }
+        quantidade_camadas = {
+            "draft": 8,
+            "youtube": 14,
+            "cinema": 22,
+        }[qualidade]
 
         self.centro = centro
         self.raio_base = raio_base
@@ -86,42 +62,76 @@ class SolarGlow(VGroup):
 
         self.camadas = VGroup()
 
-        for indice, (
-            multiplicador,
-            opacidade,
-        ) in enumerate(
-            configuracoes[qualidade]
-        ):
-            camada = Circle(
-                radius=raio_base * multiplicador,
-                fill_color=cor,
-                fill_opacity=min(
-                    0.40,
-                    opacidade * intensidade,
-                ),
-                stroke_opacity=0,
-            ).move_to(centro)
+        # ==================================================
+        # GLOW DIFUSO
+        # ==================================================
 
-            camada.set_z_index(
-                -30 + indice
+        for indice in range(
+            quantidade_camadas
+        ):
+
+            progresso = (
+                indice
+                / max(
+                    1,
+                    quantidade_camadas - 1,
+                )
             )
 
-            self.camadas.add(camada)
+            # Camadas cada vez maiores.
+            multiplicador = (
+                1.06
+                + progresso * 0.82
+            )
 
-        # Linha luminosa extremamente fina junto ao Sol.
-        # Durante o eclipse ajuda a criar a borda da coroa.
+            # Muito transparente.
+            # Quanto mais longe do Sol, menor a intensidade.
+            opacidade = (
+                0.040
+                * (1.0 - progresso) ** 2
+                * intensidade
+            )
+
+            camada = Circle(
+                radius=(
+                    raio_base
+                    * multiplicador
+                ),
+                fill_color=cor,
+                fill_opacity=opacidade,
+                stroke_opacity=0,
+            ).move_to(
+                centro
+            )
+
+            camada.set_z_index(
+                -50 + indice
+            )
+
+            self.camadas.add(
+                camada
+            )
+
+        # ==================================================
+        # BORDA LUMINOSA MUITO FINA
+        # ==================================================
+
         self.borda_luminosa = Circle(
-            radius=raio_base * 1.045,
+            radius=raio_base * 1.025,
             fill_opacity=0,
             stroke_color=WHITE,
             stroke_opacity=min(
-                0.32,
-                0.22 * intensidade,
+                0.24,
+                0.18 * intensidade,
             ),
-            stroke_width=1.5,
-        ).move_to(centro)
+            stroke_width=1.15,
+        ).move_to(
+            centro
+        )
 
-        self.borda_luminosa.set_z_index(-15)
+        self.borda_luminosa.set_z_index(
+            -20
+        )
 
         self.add(
             self.camadas,
@@ -132,12 +142,9 @@ class SolarGlow(VGroup):
 def animar_pulsacao_glow(
     glow: SolarGlow,
     *,
-    intensidade: float = 1.018,
+    intensidade: float = 1.012,
     duracao: float = 1.2,
 ):
-    """
-    Respiração luminosa muito subtil.
-    """
 
     if intensidade <= 1.0:
         raise ValueError(
@@ -159,12 +166,9 @@ def animar_pulsacao_glow(
 def animar_expansao_glow(
     glow: SolarGlow,
     *,
-    escala: float = 1.08,
+    escala: float = 1.06,
     duracao: float = 1.8,
 ):
-    """
-    Expansão luminosa controlada.
-    """
 
     if escala <= 1.0:
         raise ValueError(

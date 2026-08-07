@@ -7,12 +7,15 @@ from typing import Any
 
 from manim import (
     BLACK,
+    AnimationGroup,
     FadeIn,
     FadeOut,
     RoundedRectangle,
     Scene,
+    Succession,
     Text,
     VGroup,
+    Wait,
     config,
 )
 
@@ -34,7 +37,7 @@ from engine.sync import (
 
 class CenaAprenderMesmo(Scene):
     """
-    Cena base do Aprender Mesmo.
+    Cena base do Aprender Mesmo Engine.
     """
 
     formato: ConfiguracaoFormato = FORMATO_LONG
@@ -52,10 +55,7 @@ class CenaAprenderMesmo(Scene):
         texto: str,
     ) -> VGroup:
         """
-        Legenda cinematográfica discreta.
-
-        No Long fica acima da margem inferior,
-        sem tocar nos controlos do player.
+        Cria legenda cinematográfica dentro da área segura.
         """
 
         vertical = (
@@ -83,41 +83,38 @@ class CenaAprenderMesmo(Scene):
         largura_maxima = (
             config.frame_width - 0.70
             if vertical
-            else config.frame_width - 1.80
+            else config.frame_width - 1.70
         )
 
         legenda = Text(
             texto_formatado,
-            font_size=40 if vertical else 29,
+            font_size=40 if vertical else 27,
             color="#FFFFFF",
             weight="BOLD",
             line_spacing=0.90,
             fill_opacity=1.0,
             stroke_color=BLACK,
-            stroke_width=0.7,
-            stroke_opacity=0.85,
+            stroke_width=0.65,
+            stroke_opacity=0.90,
         )
 
-        if (
-            legenda.width
-            > largura_maxima
-        ):
+        if legenda.width > largura_maxima:
             legenda.scale_to_fit_width(
                 largura_maxima
             )
 
         fundo = RoundedRectangle(
             width=min(
-                legenda.width + 0.58,
+                legenda.width + 0.62,
                 largura_maxima + 0.08,
             ),
             height=legenda.height + 0.34,
             corner_radius=0.12,
             fill_color=BLACK,
-            fill_opacity=0.76,
+            fill_opacity=0.72,
             stroke_color="#FFFFFF",
-            stroke_opacity=0.16,
-            stroke_width=0.8,
+            stroke_opacity=0.13,
+            stroke_width=0.7,
         )
 
         legenda.move_to(
@@ -131,17 +128,19 @@ class CenaAprenderMesmo(Scene):
 
         if vertical:
             grupo.move_to(
-                [0, -4.95, 0]
+                [0, -4.80, 0]
             )
 
         else:
-            # Antes estava -3.15.
-            # Agora fica dentro da área visual segura.
+            # Área segura do Long.
             grupo.move_to(
-                [0, -2.55, 0]
+                [0, -2.48, 0]
             )
 
-        grupo.set_z_index(1000)
+        grupo.set_z_index(
+            1000,
+            family=True,
+        )
 
         return grupo
 
@@ -187,17 +186,55 @@ class CenaAprenderMesmo(Scene):
                 )
             )
 
-            self.add(legenda)
-
+        # O áudio começa imediatamente.
         self.add_sound(
             str(caminho_audio)
         )
 
+        # ==================================================
+        # SEM ANIMAÇÃO PRINCIPAL
+        # ==================================================
+
         if animacoes is None:
 
-            self.wait(
-                tempos.audio
-            )
+            if legenda is not None:
+
+                atraso_legenda = min(
+                    0.12,
+                    tempos.audio * 0.10,
+                )
+
+                duracao_entrada = min(
+                    0.16,
+                    tempos.audio * 0.12,
+                )
+
+                self.wait(
+                    atraso_legenda
+                )
+
+                self.play(
+                    FadeIn(legenda),
+                    run_time=duracao_entrada,
+                )
+
+                restante = (
+                    tempos.audio
+                    - atraso_legenda
+                    - duracao_entrada
+                )
+
+                if restante > 0:
+                    self.wait(restante)
+
+            else:
+                self.wait(
+                    tempos.audio
+                )
+
+        # ==================================================
+        # COM ANIMAÇÃO PRINCIPAL
+        # ==================================================
 
         else:
 
@@ -216,10 +253,35 @@ class CenaAprenderMesmo(Scene):
 
             if lista_animacoes:
 
-                self.play(
+                # Todas as animações principais são
+                # coordenadas para durar o tempo calculado.
+                animacao_principal = AnimationGroup(
                     *lista_animacoes,
+                    lag_ratio=0.0,
                     run_time=tempos.animacao,
                 )
+
+                if legenda is not None:
+
+                    # A imagem começa primeiro.
+                    # A legenda entra ~120 ms depois.
+                    entrada_legenda = Succession(
+                        Wait(0.12),
+                        FadeIn(
+                            legenda,
+                            run_time=0.16,
+                        ),
+                    )
+
+                    self.play(
+                        animacao_principal,
+                        entrada_legenda,
+                    )
+
+                else:
+                    self.play(
+                        animacao_principal
+                    )
 
                 restante = (
                     tempos.audio
@@ -227,20 +289,36 @@ class CenaAprenderMesmo(Scene):
                 )
 
                 if restante > 0:
-                    self.wait(restante)
+                    self.wait(
+                        restante
+                    )
 
             else:
+
+                if legenda is not None:
+                    self.play(
+                        Succession(
+                            Wait(0.12),
+                            FadeIn(
+                                legenda,
+                                run_time=0.16,
+                            ),
+                        )
+                    )
+
                 self.wait(
                     tempos.audio
                 )
 
         if legenda is not None:
+
             self.play(
                 FadeOut(legenda),
                 run_time=0.12,
             )
 
         if tempos.pausa_final > 0:
+
             self.wait(
                 tempos.pausa_final
             )
@@ -250,6 +328,7 @@ class CenaAprenderMesmo(Scene):
         objeto: Any,
         duracao: float = 0.6,
     ) -> None:
+
         self.play(
             FadeIn(objeto),
             run_time=duracao,
