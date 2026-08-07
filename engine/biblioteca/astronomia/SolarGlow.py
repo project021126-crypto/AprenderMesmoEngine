@@ -2,25 +2,25 @@ from __future__ import annotations
 
 from manim import (
     Circle,
-    VGroup,
-    YELLOW,
     ORIGIN,
+    VGroup,
+    WHITE,
+    YELLOW,
 )
 
 
 class SolarGlow(VGroup):
     """
-    Glow solar multicamada reutilizável.
+    Halo solar cinematográfico suave.
 
-    Serve para:
-    - Sol;
-    - estrelas;
-    - eclipse;
-    - fontes intensas de luz;
-    - cenas cinematográficas.
+    Em vez de anéis desenhados com contorno grosso,
+    utiliza discos transparentes sobrepostos.
 
-    O glow é composto por várias camadas com
-    raios, opacidades e espessuras diferentes.
+    Resultado:
+    - brilho difuso;
+    - transição gradual;
+    - sem efeito de "donut";
+    - continua visível como halo durante o eclipse.
     """
 
     def __init__(
@@ -32,7 +32,6 @@ class SolarGlow(VGroup):
         intensidade: float = 1.0,
         qualidade: str = "cinema",
     ) -> None:
-
         super().__init__()
 
         if raio_base <= 0:
@@ -56,30 +55,28 @@ class SolarGlow(VGroup):
             )
 
         configuracoes = {
-            "draft": {
-                "camadas": 3,
-                "expansao": 0.10,
-                "opacidade": 0.24,
-                "queda": 0.07,
-                "espessura": 4.0,
-            },
-            "youtube": {
-                "camadas": 6,
-                "expansao": 0.085,
-                "opacidade": 0.34,
-                "queda": 0.045,
-                "espessura": 5.0,
-            },
-            "cinema": {
-                "camadas": 10,
-                "expansao": 0.065,
-                "opacidade": 0.42,
-                "queda": 0.032,
-                "espessura": 6.0,
-            },
+            "draft": [
+                (1.45, 0.045),
+                (1.25, 0.070),
+                (1.12, 0.110),
+            ],
+            "youtube": [
+                (1.70, 0.025),
+                (1.48, 0.040),
+                (1.30, 0.060),
+                (1.18, 0.090),
+                (1.10, 0.130),
+            ],
+            "cinema": [
+                (1.95, 0.018),
+                (1.72, 0.026),
+                (1.52, 0.038),
+                (1.36, 0.052),
+                (1.24, 0.070),
+                (1.15, 0.095),
+                (1.09, 0.135),
+            ],
         }
-
-        cfg = configuracoes[qualidade]
 
         self.centro = centro
         self.raio_base = raio_base
@@ -89,58 +86,57 @@ class SolarGlow(VGroup):
 
         self.camadas = VGroup()
 
-        for indice in range(cfg["camadas"]):
-
-            raio = (
-                raio_base
-                + raio_base
-                * cfg["expansao"]
-                * (indice + 1)
-            )
-
-            opacidade = max(
-                0.025,
-                (
-                    cfg["opacidade"]
-                    - cfg["queda"] * indice
-                )
-                * intensidade,
-            )
-
-            espessura = max(
-                1.0,
-                cfg["espessura"] - indice * 0.38,
-            )
-
+        for indice, (
+            multiplicador,
+            opacidade,
+        ) in enumerate(
+            configuracoes[qualidade]
+        ):
             camada = Circle(
-                radius=raio,
-                stroke_color=cor,
-                stroke_opacity=min(
-                    1.0,
-                    opacidade,
+                radius=raio_base * multiplicador,
+                fill_color=cor,
+                fill_opacity=min(
+                    0.40,
+                    opacidade * intensidade,
                 ),
-                stroke_width=espessura,
+                stroke_opacity=0,
             ).move_to(centro)
 
-            camada.set_z_index(-15 + indice)
+            camada.set_z_index(
+                -30 + indice
+            )
 
             self.camadas.add(camada)
 
-        self.add(self.camadas)
+        # Linha luminosa extremamente fina junto ao Sol.
+        # Durante o eclipse ajuda a criar a borda da coroa.
+        self.borda_luminosa = Circle(
+            radius=raio_base * 1.045,
+            fill_opacity=0,
+            stroke_color=WHITE,
+            stroke_opacity=min(
+                0.32,
+                0.22 * intensidade,
+            ),
+            stroke_width=1.5,
+        ).move_to(centro)
+
+        self.borda_luminosa.set_z_index(-15)
+
+        self.add(
+            self.camadas,
+            self.borda_luminosa,
+        )
 
 
 def animar_pulsacao_glow(
     glow: SolarGlow,
     *,
-    intensidade: float = 1.025,
-    duracao: float = 1.4,
+    intensidade: float = 1.018,
+    duracao: float = 1.2,
 ):
     """
-    Pulso subtil do glow.
-
-    Mantém o efeito elegante:
-    não é uma expansão exagerada,
-    apenas uma respiração luminosa.
+    Respiração luminosa muito subtil.
     """
 
     if intensidade <= 1.0:
@@ -163,17 +159,11 @@ def animar_pulsacao_glow(
 def animar_expansao_glow(
     glow: SolarGlow,
     *,
-    escala: float = 1.12,
-    duracao: float = 2.0,
+    escala: float = 1.08,
+    duracao: float = 1.8,
 ):
     """
-    Expansão mais dramática.
-
-    Útil para:
-    - aproximação ao Sol;
-    - eclipse;
-    - revelação;
-    - transições.
+    Expansão luminosa controlada.
     """
 
     if escala <= 1.0:

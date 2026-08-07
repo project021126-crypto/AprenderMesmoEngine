@@ -12,20 +12,11 @@ from manim import (
 
 class LensFlare(VGroup):
     """
-    Lens flare cinematográfico reutilizável.
+    Lens flare cinematográfico subtil.
 
-    Não tenta imitar fotografia real de forma literal.
-    Cria uma assinatura visual elegante para:
-    - Sol;
-    - estrelas;
-    - eclipses;
-    - fontes intensas de luz.
-
-    Componentes:
-    - núcleo luminoso;
-    - anéis suaves;
-    - raios horizontais/verticais;
-    - reflexos secundários.
+    Não deve parecer um objeto desenhado.
+    Deve ser quase impercetível e apenas sugerir
+    uma fonte luminosa intensa.
     """
 
     def __init__(
@@ -37,7 +28,6 @@ class LensFlare(VGroup):
         intensidade: float = 1.0,
         qualidade: str = "cinema",
     ) -> None:
-
         super().__init__()
 
         if raio_base <= 0:
@@ -50,217 +40,110 @@ class LensFlare(VGroup):
                 "intensidade tem de ser positiva."
             )
 
-        if qualidade not in {
-            "draft",
-            "youtube",
-            "cinema",
-        }:
-            raise ValueError(
-                "qualidade deve ser "
-                "'draft', 'youtube' ou 'cinema'."
-            )
-
-        configuracoes = {
-            "draft": {
-                "aneis": 2,
-                "reflexos": 1,
-            },
-            "youtube": {
-                "aneis": 4,
-                "reflexos": 3,
-            },
-            "cinema": {
-                "aneis": 6,
-                "reflexos": 5,
-            },
-        }
-
-        cfg = configuracoes[qualidade]
-
         self.centro = centro
         self.raio_base = raio_base
-        self.cor = cor
         self.intensidade = intensidade
-        self.qualidade = qualidade
 
         # ==================================================
-        # NÚCLEO
+        # CENTRO LUMINOSO
         # ==================================================
 
         nucleo = Circle(
-            radius=raio_base * 0.08,
+            radius=raio_base * 0.055,
             fill_color=WHITE,
             fill_opacity=min(
-                1.0,
-                0.85 * intensidade,
+                0.45,
+                0.24 * intensidade,
             ),
             stroke_opacity=0,
         ).move_to(centro)
 
-        nucleo.set_z_index(100)
-
         # ==================================================
-        # ANÉIS
+        # RAIOS MUITO SUBTIS
         # ==================================================
 
-        aneis = VGroup()
-
-        for indice in range(cfg["aneis"]):
-
-            raio = raio_base * (
-                0.18 + indice * 0.11
-            )
-
-            opacidade = max(
-                0.03,
-                0.26
-                - indice * 0.035,
-            ) * intensidade
-
-            anel = Circle(
-                radius=raio,
-                stroke_color=cor,
-                stroke_opacity=min(
-                    1.0,
-                    opacidade,
-                ),
-                stroke_width=max(
-                    1.0,
-                    3.0 - indice * 0.25,
-                ),
-            ).move_to(centro)
-
-            anel.set_z_index(90 - indice)
-
-            aneis.add(anel)
-
-        # ==================================================
-        # RAIOS PRINCIPAIS
-        # ==================================================
-
-        comprimento_horizontal = (
-            raio_base * 2.8
-        )
-
-        comprimento_vertical = (
-            raio_base * 1.8
-        )
-
-        raio_horizontal = Line(
+        horizontal = Line(
             start=[
-                centro[0]
-                - comprimento_horizontal,
+                centro[0] - raio_base * 2.1,
                 centro[1],
                 0,
             ],
             end=[
-                centro[0]
-                + comprimento_horizontal,
+                centro[0] + raio_base * 2.1,
                 centro[1],
                 0,
             ],
             color=cor,
             stroke_opacity=min(
-                1.0,
-                0.24 * intensidade,
+                0.12,
+                0.075 * intensidade,
             ),
-            stroke_width=2.0,
+            stroke_width=1.2,
         )
 
-        raio_vertical = Line(
+        vertical = Line(
             start=[
                 centro[0],
-                centro[1]
-                - comprimento_vertical,
+                centro[1] - raio_base * 1.25,
                 0,
             ],
             end=[
                 centro[0],
-                centro[1]
-                + comprimento_vertical,
+                centro[1] + raio_base * 1.25,
                 0,
             ],
-            color=cor,
+            color=WHITE,
             stroke_opacity=min(
-                1.0,
-                0.14 * intensidade,
+                0.08,
+                0.045 * intensidade,
             ),
-            stroke_width=1.4,
+            stroke_width=0.9,
         )
 
-        raio_horizontal.set_z_index(80)
-        raio_vertical.set_z_index(80)
-
         # ==================================================
-        # REFLEXOS SECUNDÁRIOS
+        # REFLEXOS ÓTICOS QUASE INVISÍVEIS
         # ==================================================
 
         reflexos = VGroup()
 
-        for indice in range(
-            cfg["reflexos"]
-        ):
+        dados_reflexos = [
+            (-1.35, 0.035, 0.045),
+            (-0.72, 0.025, 0.035),
+            (0.88, 0.030, 0.040),
+            (1.55, 0.020, 0.055),
+        ]
 
-            distancia = (
-                raio_base
-                * (0.80 + indice * 0.52)
-            )
-
-            lado = (
-                -1
-                if indice % 2 == 0
-                else 1
-            )
-
-            posicao_reflexo = [
-                centro[0]
-                + distancia * lado,
-                centro[1]
-                + raio_base
-                * 0.07
-                * (indice - 1),
-                0,
-            ]
+        for (
+            distancia,
+            opacidade,
+            tamanho,
+        ) in dados_reflexos:
 
             reflexo = Circle(
-                radius=raio_base
-                * (
-                    0.055
-                    + 0.012 * indice
-                ),
+                radius=raio_base * tamanho,
                 fill_color=cor,
-                fill_opacity=max(
-                    0.035,
-                    (
-                        0.17
-                        - indice * 0.022
-                    )
-                    * intensidade,
+                fill_opacity=min(
+                    0.08,
+                    opacidade * intensidade,
                 ),
-                stroke_color=WHITE,
-                stroke_opacity=max(
-                    0.02,
-                    0.10
-                    - indice * 0.012,
-                ),
-                stroke_width=1.0,
-            ).move_to(
-                posicao_reflexo
+                stroke_opacity=0,
             )
 
-            reflexo.set_z_index(
-                70 - indice
+            reflexo.move_to(
+                [
+                    centro[0]
+                    + raio_base * distancia,
+                    centro[1],
+                    0,
+                ]
             )
 
-            reflexos.add(
-                reflexo
-            )
+            reflexos.add(reflexo)
 
         self.add(
             reflexos,
-            raio_horizontal,
-            raio_vertical,
-            aneis,
+            horizontal,
+            vertical,
             nucleo,
         )
 
@@ -268,34 +151,18 @@ class LensFlare(VGroup):
 def animar_entrada_flare(
     flare: LensFlare,
     *,
-    escala_inicial: float = 0.35,
-    duracao: float = 1.4,
+    escala_inicial: float = 0.65,
+    duracao: float = 1.0,
 ):
-    """
-    Entrada progressiva do lens flare.
-    """
-
     if escala_inicial <= 0:
         raise ValueError(
             "escala_inicial tem de ser positiva."
         )
 
-    if duracao <= 0:
-        raise ValueError(
-            "duracao tem de ser positiva."
-        )
-
-    flare.scale(
-        escala_inicial
-    )
-
-    fator = (
-        1.0
-        / escala_inicial
-    )
+    flare.scale(escala_inicial)
 
     return flare.animate.scale(
-        fator
+        1 / escala_inicial
     ).set_run_time(
         duracao
     )
@@ -304,23 +171,12 @@ def animar_entrada_flare(
 def animar_respiracao_flare(
     flare: LensFlare,
     *,
-    escala: float = 1.035,
-    duracao: float = 1.2,
+    escala: float = 1.015,
+    duracao: float = 1.0,
 ):
-    """
-    Pequena expansão luminosa.
-
-    Deve ser usada de forma subtil.
-    """
-
-    if escala <= 1.0:
+    if escala <= 1:
         raise ValueError(
             "escala deve ser superior a 1."
-        )
-
-    if duracao <= 0:
-        raise ValueError(
-            "duracao tem de ser positiva."
         )
 
     return flare.animate.scale(

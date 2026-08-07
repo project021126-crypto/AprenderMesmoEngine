@@ -13,46 +13,61 @@ from manim import (
     Scene,
     Text,
     VGroup,
-    WHITE,
     config,
 )
 
-from engine.audio import VOZ_PADRAO, gerar_audio
+from engine.audio import (
+    VOZ_PADRAO,
+    gerar_audio,
+)
+
 from engine.formatos import (
     ConfiguracaoFormato,
     FORMATO_LONG,
     FORMATO_SHORT,
 )
-from engine.sync import calcular_duracao_narracao
+
+from engine.sync import (
+    calcular_duracao_narracao,
+)
 
 
 class CenaAprenderMesmo(Scene):
     """
     Cena base do Aprender Mesmo.
-
-    A legenda do rodapé é criada diretamente aqui para não
-    depender de versões antigas de engine/legendas.py.
     """
 
     formato: ConfiguracaoFormato = FORMATO_LONG
 
     pasta_narracoes = Path("narracoes")
+
     voz_padrao = VOZ_PADRAO
+
     velocidade_voz = "+0%"
+
     volume_voz = "+0%"
 
-    def criar_legenda_rodape(self, texto: str) -> VGroup:
+    def criar_legenda_rodape(
+        self,
+        texto: str,
+    ) -> VGroup:
         """
-        Legenda de rodapé forte:
-        - branco puro;
-        - fonte grande e em negrito;
-        - 2 ou 3 linhas no Short;
-        - fundo preto sólido;
-        - posição acima dos controlos do vídeo.
+        Legenda cinematográfica discreta.
+
+        No Long fica acima da margem inferior,
+        sem tocar nos controlos do player.
         """
 
-        vertical = config.frame_height > config.frame_width
-        limite = 28 if vertical else 72
+        vertical = (
+            config.frame_height
+            > config.frame_width
+        )
+
+        limite = (
+            28
+            if vertical
+            else 64
+        )
 
         linhas = textwrap.wrap(
             texto.strip(),
@@ -60,60 +75,88 @@ class CenaAprenderMesmo(Scene):
             break_long_words=False,
             break_on_hyphens=False,
         )
-        texto_formatado = "\n".join(linhas)
+
+        texto_formatado = "\n".join(
+            linhas
+        )
 
         largura_maxima = (
-            config.frame_width - 0.50
+            config.frame_width - 0.70
             if vertical
-            else config.frame_width - 1.10
+            else config.frame_width - 1.80
         )
 
         legenda = Text(
             texto_formatado,
-            font_size=42 if vertical else 34,
+            font_size=40 if vertical else 29,
             color="#FFFFFF",
             weight="BOLD",
-            line_spacing=0.88,
+            line_spacing=0.90,
             fill_opacity=1.0,
             stroke_color=BLACK,
-            stroke_width=1.0,
-            stroke_opacity=1.0,
+            stroke_width=0.7,
+            stroke_opacity=0.85,
         )
 
-        if legenda.width > largura_maxima:
-            legenda.scale_to_fit_width(largura_maxima)
+        if (
+            legenda.width
+            > largura_maxima
+        ):
+            legenda.scale_to_fit_width(
+                largura_maxima
+            )
 
         fundo = RoundedRectangle(
-            width=min(legenda.width + 0.62, largura_maxima + 0.10),
-            height=legenda.height + 0.45,
-            corner_radius=0.14,
+            width=min(
+                legenda.width + 0.58,
+                largura_maxima + 0.08,
+            ),
+            height=legenda.height + 0.34,
+            corner_radius=0.12,
             fill_color=BLACK,
-            fill_opacity=1.0,
-            stroke_color=WHITE,
-            stroke_opacity=1.0,
-            stroke_width=2.2,
+            fill_opacity=0.76,
+            stroke_color="#FFFFFF",
+            stroke_opacity=0.16,
+            stroke_width=0.8,
         )
 
-        legenda.move_to(fundo.get_center())
-        grupo = VGroup(fundo, legenda)
+        legenda.move_to(
+            fundo.get_center()
+        )
+
+        grupo = VGroup(
+            fundo,
+            legenda,
+        )
 
         if vertical:
-            grupo.move_to([0, -5.30, 0])
+            grupo.move_to(
+                [0, -4.95, 0]
+            )
+
         else:
-            grupo.move_to([0, -3.15, 0])
+            # Antes estava -3.15.
+            # Agora fica dentro da área visual segura.
+            grupo.move_to(
+                [0, -2.55, 0]
+            )
 
         grupo.set_z_index(1000)
+
         return grupo
 
     def narrar(
         self,
         texto: str,
-        animacoes: Any | Sequence[Any] | None = None,
+        animacoes: Any
+        | Sequence[Any]
+        | None = None,
         *,
         mostrar_legenda: bool = True,
-        pausa_final: float = 0.20,
-        margem_animacao: float = 0.15,
+        pausa_final: float = 0.12,
+        margem_animacao: float = 0.12,
     ) -> None:
+
         texto = texto.strip()
 
         if not texto:
@@ -138,53 +181,88 @@ class CenaAprenderMesmo(Scene):
         legenda = None
 
         if mostrar_legenda:
-            legenda = self.criar_legenda_rodape(texto)
+            legenda = (
+                self.criar_legenda_rodape(
+                    texto
+                )
+            )
+
             self.add(legenda)
 
-        self.add_sound(str(caminho_audio))
+        self.add_sound(
+            str(caminho_audio)
+        )
 
         if animacoes is None:
-            self.wait(tempos.audio)
+
+            self.wait(
+                tempos.audio
+            )
+
         else:
-            if isinstance(animacoes, (list, tuple)):
-                lista_animacoes = list(animacoes)
+
+            if isinstance(
+                animacoes,
+                (list, tuple),
+            ):
+                lista_animacoes = list(
+                    animacoes
+                )
+
             else:
-                lista_animacoes = [animacoes]
+                lista_animacoes = [
+                    animacoes
+                ]
 
             if lista_animacoes:
+
                 self.play(
                     *lista_animacoes,
                     run_time=tempos.animacao,
                 )
 
-                restante = tempos.audio - tempos.animacao
+                restante = (
+                    tempos.audio
+                    - tempos.animacao
+                )
 
                 if restante > 0:
                     self.wait(restante)
+
             else:
-                self.wait(tempos.audio)
+                self.wait(
+                    tempos.audio
+                )
 
         if legenda is not None:
-            self.play(FadeOut(legenda), run_time=0.15)
+            self.play(
+                FadeOut(legenda),
+                run_time=0.12,
+            )
 
         if tempos.pausa_final > 0:
-            self.wait(tempos.pausa_final)
+            self.wait(
+                tempos.pausa_final
+            )
 
     def mostrar_sem_narracao(
         self,
         objeto: Any,
         duracao: float = 0.6,
     ) -> None:
-        self.play(FadeIn(objeto), run_time=duracao)
+        self.play(
+            FadeIn(objeto),
+            run_time=duracao,
+        )
 
 
 class CenaShort(CenaAprenderMesmo):
-    """Base automática para vídeos verticais 9:16."""
+    """Vídeos verticais 9:16."""
 
     formato = FORMATO_SHORT
 
 
 class CenaLong(CenaAprenderMesmo):
-    """Base automática para vídeos horizontais 16:9."""
+    """Vídeos horizontais 16:9."""
 
     formato = FORMATO_LONG
